@@ -30,7 +30,7 @@
     lines.push('✗ '+(e.message||(e.error&&e.error.message)||'load failed')
       +(where?(' › '+String(where).replace(location.origin,'')):'')+(e.lineno?(':'+e.lineno):'')); render();
   },true);
-  __diag('build=vendor-5 · origin='+location.origin);   // bump to tell cached vs fresh apart
+  __diag('build=vendor-6 · origin='+location.origin);   // bump to tell cached vs fresh apart
   window.addEventListener('unhandledrejection',function(e){
     var r=e.reason; lines.push('✗ reject: '+((r&&(r.message||r.stack))||r)); render();
   });
@@ -40,6 +40,21 @@
     +'\nUA: '+navigator.userAgent);
   setTimeout(function(){ if(lines.indexOf('main.js: start')<0){
     lines.push('⚠ main.js never executed — the ES module / import map failed to load on this browser.'); render(); } },6000);
+  // Probe each critical file exactly as the module loader would, and report what
+  // the network/proxy actually returns (status · content-type · first bytes) so
+  // we can see if it's a 404, a block/HTML page, a wrong MIME type, or fine JS.
+  if(DEBUG){
+    ['src/main-v6.js','vendor/three/three.module.js','src/game.js','vendor/three/addons/loaders/GLTFLoader.js'].forEach(function(u){
+      fetch(u,{cache:'no-store'}).then(function(r){
+        var ct=r.headers.get('content-type')||'(none)';
+        return r.text().then(function(t){
+          var head=t.slice(0,55).replace(/\s+/g,' ');
+          var kind=/^\s*</.test(t)?'HTML?!':'js?';
+          lines.push('probe '+u.split('/').pop()+' → '+r.status+' · '+ct+' ['+kind+'] '+head); render();
+        });
+      }).catch(function(e){ lines.push('probe '+u.split('/').pop()+' → NETWORK FAIL: '+((e&&e.message)||e)); render(); });
+    });
+  }
 })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -405,6 +420,6 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
      to the same poisoned src/main.js. A brand-new path only exists once a
      deploy is fully live, so it can never be served stale/poisoned. Bump the
      version (main-vN.js) if it ever gets poisoned during a deploy window. -->
-<script type="module" src="src/main-v5.js"></script>
+<script type="module" src="src/main-v6.js"></script>
 </body>
 </html>

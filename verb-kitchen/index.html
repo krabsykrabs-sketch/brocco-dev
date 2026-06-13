@@ -259,14 +259,6 @@ body.touch #touchControls{display:block;}
 #loaderMsg::after{content:'…';}
 #loaderSub{color:var(--muted); font-weight:700; font-size:13.5px; margin-top:-12px;}
 #loadingNote{position:absolute; bottom:18px; color:var(--muted); font-weight:700; font-size:14px;}
-/* ---------- rotate-to-landscape prompt (touch devices in portrait only) ---------- */
-#rotate{position:fixed; inset:0; z-index:90; display:none; flex-direction:column; align-items:center;
-  justify-content:center; gap:20px; background:var(--navy); text-align:center; padding:30px;}
-body.touch #rotate{display:flex;}
-@media (orientation: landscape){ body.touch #rotate{display:none;} }
-.rot-icon{font-size:74px; animation:rotPulse 1.7s ease-in-out infinite;}
-.rot-text{font-family:'Fredoka One',cursive; font-size:22px; color:var(--amber); line-height:1.35; max-width:340px;}
-@keyframes rotPulse{0%,100%{transform:rotate(-20deg);} 50%{transform:rotate(20deg);}}
 </style>
 <script type="importmap">
 { "imports": {
@@ -384,11 +376,6 @@ body.touch #rotate{display:flex;}
   <div id="loaderPizza"></div>
   <div id="loaderMsg">Rolling the dough</div>
   <div id="loaderSub">your kitchen is being set up</div>
-</div>
-
-<div id="rotate">
-  <div class="rot-icon">🔄</div>
-  <div class="rot-text">Please rotate your device<br>to landscape</div>
 </div>
 <script type="module" src="src/main.js"></script>
 </body>

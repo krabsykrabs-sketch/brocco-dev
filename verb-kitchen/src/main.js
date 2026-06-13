@@ -47,6 +47,16 @@ function renderMute() { muteBtn.textContent = audio.muted ? '🔇' : '🔊'; }
 muteBtn.addEventListener('click', () => { audio.setMuted(!audio.muted); renderMute(); });
 renderMute();
 
+// Stop all sound when the game isn't visible AND focused — switching tabs or
+// moving out of the browser shouldn't leave the music playing.
+const setAudioActive = () => audio.setActive(document.hasFocus() && !document.hidden);
+document.addEventListener('visibilitychange', setAudioActive);
+window.addEventListener('blur', setAudioActive);
+window.addEventListener('focus', setAudioActive);
+setAudioActive();   // set the right state even if the page loaded in a background tab
+// mobile: a ctx the OS suspended in the background only resumes on a user gesture
+['pointerdown', 'keydown'].forEach((ev) => window.addEventListener(ev, () => audio.resume()));
+
 // --- navigation ---
 function showLevelSelect() {
   game.stopRound();

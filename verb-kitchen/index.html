@@ -286,15 +286,15 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 #loaderSub{color:var(--muted); font-weight:700; font-size:13.5px; margin-top:-12px;}
 #loadingNote{position:absolute; bottom:18px; color:var(--muted); font-weight:700; font-size:14px;}
 </style>
-<!-- Import-map polyfill: lets the bare `import … from 'three'` resolve on older
-     browsers too (Safari < 16.4, older tablets) — without it the whole module
-     never runs and the menu buttons do nothing. No-op where import maps are
-     native (modern phones/desktop). -->
-<script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+<!-- THREE.js is SELF-HOSTED under vendor/ (relative paths) — NOT a CDN. A CDN
+     (jsdelivr) is blocked/unreachable on some networks, which made the module
+     fail to load and left the menu dead. es-module-shims (also local) keeps the
+     import map working on older browsers; it's a no-op where native. -->
+<script async src="./vendor/es-module-shims.js"></script>
 <script type="importmap">
 { "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    "three": "./vendor/three/three.module.js",
+    "three/addons/": "./vendor/three/addons/"
 } }
 </script>
 </head>

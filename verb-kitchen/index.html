@@ -25,8 +25,14 @@ canvas{display:block;}
 button{font-family:inherit; cursor:pointer; border:none;}
 
 /* ---------- shared chrome ---------- */
-.screen{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  background:radial-gradient(120% 90% at 50% 0%, var(--navy3) 0%, var(--navy) 70%); z-index:40; gap:18px; padding:20px;}
+.screen{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+  background:radial-gradient(120% 90% at 50% 0%, var(--navy3) 0%, var(--navy) 70%); z-index:40; gap:18px; padding:20px;
+  overflow-y:auto; -webkit-overflow-scrolling:touch;}
+/* centre the stack when it fits, but scroll (with the TOP reachable) when it
+   overflows a short screen. auto margins do this; justify-content:center clips
+   the top of overflowing content and can't be scrolled back to. */
+.screen>:first-child{margin-top:auto;}
+.screen>:last-child{margin-bottom:auto;}
 .screen.hidden,.hidden{display:none !important;}
 h1.logo{font-family:'Fredoka One',cursive; font-size:clamp(34px,6vw,58px); color:var(--teal);
   text-shadow:0 4px 0 rgba(0,0,0,.35); letter-spacing:1px;}
@@ -89,6 +95,18 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 .lvl .tgt b{color:#d8a93a; font-weight:800; letter-spacing:-1.5px;}
 .lvl .tgt.author b{color:var(--teal); text-shadow:0 0 5px var(--teal); letter-spacing:0;}
 .lvl .tgt.author{color:var(--teal);}
+/* short screens (landscape phones): smaller cards so the grids need less scroll */
+@media (max-height:560px){
+  h1.logo{font-size:30px;}
+  .tagline{font-size:15px;}
+  .howto{padding:11px 16px; gap:6px;}
+  .howto .row{font-size:13.5px;}
+  #levelGrid,#shopGrid{gap:12px;}
+  .lvl{width:126px; padding:11px 9px 9px; gap:5px;}
+  .lvl .em{font-size:30px;}
+  .charCard{width:118px;}
+  .cportrait{width:94px; height:110px;}
+}
 
 /* ---------- HUD ---------- */
 #hud{position:absolute; inset:0; pointer-events:none; z-index:20; display:none;}
@@ -234,6 +252,11 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 #loaderSub{color:var(--muted); font-weight:700; font-size:13.5px; margin-top:-12px;}
 #loadingNote{position:absolute; bottom:18px; color:var(--muted); font-weight:700; font-size:14px;}
 </style>
+<!-- Import-map polyfill: lets the bare `import … from 'three'` resolve on older
+     browsers too (Safari < 16.4, older tablets) — without it the whole module
+     never runs and the menu buttons do nothing. No-op where import maps are
+     native (modern phones/desktop). -->
+<script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
 <script type="importmap">
 { "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",

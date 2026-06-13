@@ -21,8 +21,6 @@ export class SinkQuiz {
     this.chainEl = document.getElementById('quizChain');
     this.goBtn = document.getElementById('quizGo');
     this.goBtn.addEventListener('click', () => this.nextAfterWrong());
-    this.laterBtn = document.getElementById('quizLater');
-    if (this.laterBtn) this.laterBtn.addEventListener('click', () => this.close());
   }
 
   get open() { return this.el.classList.contains('on'); }
@@ -39,7 +37,6 @@ export class SinkQuiz {
     this.subEl.textContent = q.sub + (q.fromMissed ? ' · one more try!' : '');
     this.chainEl.style.display = 'none';
     this.goBtn.style.display = 'none';
-    if (this.laterBtn) this.laterBtn.style.display = 'inline-block';
     this.chipsEl.style.display = 'flex';
     this.chipsEl.innerHTML = '';
     q.chips.forEach((c, i) => {

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verb Kitchen 🍳 — Krabsy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#2ee6c0; --coral:#ff8585; --amber:#ffcf5e;
+  --navy:#0c1430; --navy2:#141f44; --navy3:#1d2b5c;
+  --ink:#eef3ff; --muted:#9fb0d8;
+  /* Order tickets are a fixed pixel design; scale the whole strip with the
+     viewport so they read on big monitors yet stay sane on small laptops.
+     vmin tracks the kitchen (camera fits the smaller dimension). */
+  --ticket-scale:clamp(1.2, 100vmin / 640, 2.8);
+}
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+html,body{height:100%; overflow:hidden; background:var(--navy); font-family:'Nunito',sans-serif; color:var(--ink);}
+#app{position:fixed; inset:0;}
+canvas{display:block;}
+button{font-family:inherit; cursor:pointer; border:none;}
+
+/* ---------- shared chrome ---------- */
+.screen{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:radial-gradient(120% 90% at 50% 0%, var(--navy3) 0%, var(--navy) 70%); z-index:40; gap:18px; padding:20px;}
+.screen.hidden,.hidden{display:none !important;}
+h1.logo{font-family:'Fredoka One',cursive; font-size:clamp(34px,6vw,58px); color:var(--teal);
+  text-shadow:0 4px 0 rgba(0,0,0,.35); letter-spacing:1px;}
+h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
+.tagline{color:var(--muted); font-weight:700; font-size:17px; margin-top:-8px;}
+.howto{display:flex; flex-direction:column; gap:10px; background:var(--navy2); border-radius:18px; padding:18px 24px;
+  box-shadow:0 8px 24px rgba(0,0,0,.3); max-width:520px;}
+.howto .row{display:flex; align-items:center; gap:14px; font-weight:700; font-size:15.5px;}
+.howto .ico{font-size:24px; width:34px; text-align:center; flex:none;}
+.key{display:inline-block; background:var(--navy3); border:2px solid rgba(255,255,255,.18); border-bottom-width:4px;
+  border-radius:8px; padding:1px 9px; font-weight:800; font-size:13px; margin:0 2px;}
+.btn-primary{background:var(--teal); color:#06281f; font-family:'Fredoka One',cursive; font-size:24px;
+  padding:14px 52px; border-radius:999px; box-shadow:0 6px 0 #18a285, 0 12px 24px rgba(0,0,0,.35);
+  transition:transform .08s, box-shadow .08s;}
+.btn-primary:hover{transform:translateY(-2px);}
+.btn-primary:active{transform:translateY(3px); box-shadow:0 2px 0 #18a285;}
+.btn-ghost{background:var(--navy3); color:var(--ink); font-weight:800; font-size:16px; padding:10px 26px; border-radius:999px;
+  border:2px solid rgba(255,255,255,.14);}
+.btn-ghost:hover{border-color:var(--teal); color:var(--teal);}
+.form-base{color:var(--amber); font-weight:800;}
+.form-past{color:var(--teal); font-weight:800;}
+.form-pp{color:var(--coral); font-weight:800;}
+
+/* ---------- character shop ---------- */
+#shopGrid{display:flex; gap:16px; flex-wrap:wrap; justify-content:center; max-width:720px;}
+.charCard{width:148px; background:var(--navy2); border-radius:18px; padding:10px 10px 12px; display:flex;
+  flex-direction:column; align-items:center; gap:5px; border:3px solid transparent;
+  transition:transform .1s, border-color .1s; position:relative;}
+.charCard:not(.locked):hover{transform:translateY(-4px); border-color:var(--teal);}
+.charCard.active{border-color:var(--teal); box-shadow:0 0 0 3px rgba(46,230,192,.28);}
+.cportrait{width:120px; height:140px; display:flex; align-items:flex-end; justify-content:center;}
+.cportrait img{max-width:100%; max-height:100%;}
+.charCard.locked .cportrait img{filter:grayscale(.9) brightness(.45);}
+.cname{font-family:'Fredoka One',cursive; font-size:16px; color:var(--ink);}
+.ctag{font-weight:800; font-size:13px; color:var(--muted);}
+.ctag.sel{color:var(--teal);}
+.ctag.cost{color:var(--amber);}
+.charCard .clock{position:absolute; top:9px; right:11px; font-size:18px;}
+
+/* ---------- level select ---------- */
+#levelGrid{display:flex; gap:18px; flex-wrap:wrap; justify-content:center; max-width:760px;}
+.lvl{width:160px; background:var(--navy2); border-radius:20px; padding:18px 14px 14px; display:flex; flex-direction:column;
+  align-items:center; gap:8px; border:3px solid transparent; transition:transform .1s, border-color .1s; position:relative;}
+.lvl:not(.locked):hover{transform:translateY(-4px); border-color:var(--teal);}
+.lvl .em{font-size:42px;}
+.lvl .nm{font-family:'Fredoka One',cursive; font-size:16px; color:var(--ink); text-align:center;}
+.lvl .stars{font-size:18px; letter-spacing:2px;}
+.lvl .stars .off{opacity:.22;}
+.lvl .best{font-size:12.5px; color:var(--muted); font-weight:700;}
+.lvl.locked{opacity:.55; cursor:not-allowed;}
+.lvl.locked .em{filter:grayscale(.9);}
+.lvl .lock{position:absolute; top:8px; right:10px; font-size:18px;}
+.lvl.teaser{border-style:dashed; border-color:rgba(255,255,255,.18);}
+.lvl .soon{font-size:11px; font-weight:800; color:var(--amber); text-transform:uppercase; letter-spacing:.6px;}
+/* author (4th) star — distinct teal glow, shown only when earned */
+.lvl .stars .author{color:var(--teal); text-shadow:0 0 8px var(--teal); margin-left:3px; font-size:20px;}
+/* target times: 3 visible tiers + author (hidden until gold) */
+.lvl .targets{display:grid; grid-template-columns:1fr 1fr; gap:1px 10px; margin-top:2px; width:100%;}
+.lvl .tgt{font-size:10.5px; font-weight:800; color:var(--muted); display:flex; justify-content:space-between; gap:4px; white-space:nowrap;}
+.lvl .tgt b{color:#d8a93a; font-weight:800; letter-spacing:-1.5px;}
+.lvl .tgt.author b{color:var(--teal); text-shadow:0 0 5px var(--teal); letter-spacing:0;}
+.lvl .tgt.author{color:var(--teal);}
+
+/* ---------- HUD ---------- */
+#hud{position:absolute; inset:0; pointer-events:none; z-index:20; display:none;}
+#hud.on{display:block;}
+#tickets{position:absolute; top:10px; left:12px; display:flex; gap:10px;
+  transform:scale(var(--ticket-scale)); transform-origin:top left;}
+.ticket{width:128px; background:#fffaf0; color:#3a2c18; border-radius:12px; padding:8px 9px 7px;
+  box-shadow:0 6px 14px rgba(0,0,0,.35); animation:tIn .35s ease-out; position:relative;}
+@keyframes tIn{from{transform:translateY(-90px) rotate(-4deg); opacity:0;} to{transform:none; opacity:1;}}
+.ticket.gone{transition:transform .5s ease-in, opacity .5s; transform:translateY(-110px) rotate(6deg) !important; opacity:0;}
+.ticket.servedAnim{transition:transform .45s ease-in, opacity .45s; transform:scale(1.18); opacity:0;}
+.ticket .dish{font-size:30px; text-align:center; line-height:1.1;}
+.ticket .dn{font-weight:800; font-size:12px; text-align:center;}
+.ticket .ings{text-align:center; font-size:14px; letter-spacing:1px; min-height:18px;}
+.ticket .pbar{height:7px; background:#e8dcc8; border-radius:99px; margin-top:5px; overflow:hidden;}
+.ticket .pfill{height:100%; border-radius:99px; background:var(--teal); transition:width .2s linear;}
+.ticket.hurry{animation:shake .35s infinite;}
+.ticket.hurry .pfill{background:var(--coral);}
+.ticket.warn .pfill{background:var(--amber);}
+@keyframes shake{0%,100%{transform:rotate(0)} 25%{transform:rotate(-2.2deg)} 75%{transform:rotate(2.2deg)}}
+#topRight{position:absolute; top:10px; right:12px; display:flex; gap:10px; align-items:center;}
+.pill{background:rgba(12,20,48,.85); border:2px solid rgba(255,255,255,.12); border-radius:999px; padding:7px 16px;
+  font-weight:800; font-size:17px; display:flex; gap:7px; align-items:center; backdrop-filter:blur(3px);}
+#timerPill.frantic{border-color:var(--coral); color:var(--coral); animation:pulse .5s infinite;}
+@keyframes pulse{50%{transform:scale(1.07);}}
+#comboPill{color:var(--amber); display:none;}
+#comboPill.on{display:flex; animation:pop .25s;}
+@keyframes pop{0%{transform:scale(.6);} 70%{transform:scale(1.15);} 100%{transform:scale(1);}}
+#muteBtn,#quitBtn{pointer-events:auto; background:rgba(12,20,48,.85); border:2px solid rgba(255,255,255,.12); border-radius:50%;
+  width:40px; height:40px; font-size:17px; color:var(--ink);}
+#muteBtn:hover,#quitBtn:hover{border-color:var(--teal);}
+#hint{position:absolute; bottom:14px; left:50%; transform:translateX(-50%); background:rgba(12,20,48,.88);
+  border:2px solid rgba(255,255,255,.12); border-radius:999px; padding:8px 22px; font-weight:800; font-size:15px;
+  white-space:nowrap; transition:opacity .15s;}
+#hint:empty{opacity:0;}
+#plateCount{position:absolute; bottom:14px; left:14px; background:rgba(12,20,48,.88); border:2px solid rgba(255,255,255,.12);
+  border-radius:999px; padding:8px 16px; font-weight:800; font-size:15px;}
+#plateCount.zero{border-color:var(--coral); color:var(--coral); animation:pulse .6s infinite;}
+.fxpop{position:absolute; font-family:'Fredoka One',cursive; font-size:20px; pointer-events:none; z-index:25;
+  animation:rise 1s ease-out forwards; text-shadow:0 2px 0 rgba(0,0,0,.4); white-space:nowrap;}
+@keyframes rise{from{transform:translate(-50%,0); opacity:1;} to{transform:translate(-50%,-70px); opacity:0;}}
+/* station speech bubble ("use a plate") */
+.fxbubble{position:absolute; transform:translate(-50%,-100%); background:#fffaf0; color:#3a2c18; font-size:26px;
+  padding:7px 12px 8px; border-radius:14px; box-shadow:0 6px 16px rgba(0,0,0,.4); pointer-events:none; z-index:26;
+  white-space:nowrap; animation:bubbleIn .18s ease-out;}
+.fxbubble::after{content:''; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
+  border:8px solid transparent; border-top-color:#fffaf0; border-bottom:0;}
+.fxbubble.out{opacity:0; transition:opacity .5s ease-in, transform .5s; transform:translate(-50%,-135%);}
+@keyframes bubbleIn{from{transform:translate(-50%,-80%) scale(.6); opacity:0;}}
+
+/* ---------- sink question ---------- */
+#quiz{position:absolute; inset:0; z-index:30; display:none; align-items:center; justify-content:center;
+  background:rgba(7,11,28,.62); backdrop-filter:blur(2px);}
+#quiz.on{display:flex;}
+#quizCard{background:var(--navy2); border-radius:24px; padding:26px 34px; text-align:center; max-width:480px; width:92%;
+  box-shadow:0 18px 50px rgba(0,0,0,.5); border:3px solid var(--teal); animation:qIn .22s ease-out;}
+@keyframes qIn{from{transform:scale(.85); opacity:0;}}
+#quizCard.wrongState{border-color:var(--coral);}
+#quizTitle{font-size:14px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;}
+#quizPrompt{font-family:'Fredoka One',cursive; font-size:34px; margin-bottom:6px;}
+#quizSub{color:var(--muted); font-weight:700; font-size:14px; margin-bottom:16px; min-height:18px;}
+#chips{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+.chip{background:var(--navy3); color:var(--ink); font-family:'Fredoka One',cursive; font-size:21px; padding:12px 26px;
+  border-radius:999px; border:3px solid rgba(255,255,255,.16); transition:transform .08s, border-color .08s; min-width:110px;}
+.chip:hover{transform:translateY(-2px); border-color:var(--teal);}
+.chip.good{background:var(--teal); color:#06281f; border-color:var(--teal); animation:pop .3s;}
+.chip.bad{background:var(--coral); color:#4a1010; border-color:var(--coral); animation:shake .3s 2;}
+#quizChain{font-family:'Fredoka One',cursive; font-size:24px; margin-top:16px; display:none;}
+.quizBtns{margin-top:16px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+#quizGo{display:none;}
+#quizKeys{margin-top:14px; color:var(--muted); font-size:12.5px; font-weight:700;}
+/* wash progress: 3 correct answers = 1 clean plate */
+#washBar{display:flex; gap:8px; justify-content:center; margin:2px 0 4px;}
+#washBar .seg{width:60px; height:13px; border-radius:99px; background:var(--navy3);
+  border:2px solid rgba(255,255,255,.14); transition:background .25s, transform .2s, border-color .25s;}
+#washBar .seg.on{background:var(--teal); border-color:var(--teal); transform:scaleY(1.2);}
+#washLabel{color:var(--muted); font-weight:800; font-size:13px; margin-bottom:12px;}
+/* plate-washed celebration */
+.confetti{position:fixed; width:9px; height:13px; border-radius:2px; z-index:50; pointer-events:none;
+  transform:translate(-50%,-50%); animation:confettiFall 1.15s cubic-bezier(.2,.6,.4,1) forwards;}
+@keyframes confettiFall{
+  0%{transform:translate(-50%,-50%) rotate(0) scale(1); opacity:1;}
+  100%{transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)) scale(.85); opacity:0;}
+}
+/* recipe tutorial — a wooden-framed card around a recipe image (Overcooked-
+   inspired, our own art). Card bg = navy so the image blends seamlessly. */
+#recipe{position:absolute; inset:0; z-index:65; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(120% 90% at 50% 0%, var(--navy3) 0%, var(--navy) 72%); padding:20px;}
+#recipe.hidden{display:none;}
+#recipeCard{position:relative; background:var(--navy); border-radius:18px; padding:22px 26px 24px; text-align:center;
+  max-width:660px; width:100%; border:9px solid #7c552e;
+  box-shadow:0 0 0 3px #422c15 inset, 0 22px 60px rgba(0,0,0,.6);
+  display:flex; flex-direction:column; gap:12px; align-items:center;}
+#recipeTitle{font-family:'Fredoka One',cursive; font-size:38px; color:#f3ead9; letter-spacing:2px;
+  text-transform:uppercase; text-shadow:0 2px 0 rgba(0,0,0,.4); margin-top:2px;}
+#recipeRule{width:170px; height:4px; border-radius:2px; margin-top:-6px; opacity:.8;
+  background:linear-gradient(90deg, transparent, #cdbf9f 20%, #cdbf9f 80%, transparent);}
+#recipeImg{display:none; max-width:100%; max-height:46vh; border-radius:10px;}
+#recipeText{font-family:'Nunito',sans-serif; font-weight:800; font-size:16.5px; color:var(--ink); max-width:560px; line-height:1.35;}
+/* in-card loader: shown while assets load, swapped for the Start button */
+#recipeLoader{display:none; flex-direction:column; align-items:center; gap:9px; padding:4px 0 2px;}
+#recipeLoaderPizza{width:54px; height:54px; border-radius:50%; border:5px solid #c98a4b; background:#5d4327;
+  box-shadow:inset 0 0 0 2px #8a5f33; transition:background .25s;}
+#recipeLoaderMsg{font-family:'Fredoka One',cursive; font-size:14px; color:var(--amber);}
+#recipeLoaderMsg::after{content:'…';}
+#recipeTag{position:absolute; top:-16px; right:-12px; transform:rotate(6deg); background:#f3ead9; color:#3a2c18;
+  font-family:'Fredoka One',cursive; font-size:15px; line-height:1.02; padding:9px 15px; border-radius:4px;
+  box-shadow:0 5px 12px rgba(0,0,0,.45); text-transform:uppercase; letter-spacing:.6px;}
+#recipeTag::before{content:''; position:absolute; top:-9px; left:50%; transform:translateX(-50%) rotate(-4deg);
+  width:46px; height:18px; background:rgba(220,225,235,.5); border:1px solid rgba(255,255,255,.25); border-radius:2px;}
+#recipeHint{color:var(--muted); font-weight:700; font-size:13.5px;}
+
+/* ---------- post level ---------- */
+#post .scoreBig{font-family:'Fredoka One',cursive; font-size:46px; color:var(--amber);}
+#postStars{font-size:52px; letter-spacing:8px; min-height:64px;}
+#postStars span{display:inline-block; opacity:0; transform:scale(0);}
+#postStars span.on{animation:starIn .45s cubic-bezier(.2,2.4,.4,1) forwards;}
+#postStars span.off2{opacity:.18; transform:none;}
+#postStars span.author{color:var(--teal); text-shadow:0 0 18px var(--teal);}
+@keyframes starIn{to{opacity:1; transform:scale(1) rotate(0);}}
+#postAuthor{color:var(--teal); font-weight:800; font-size:14.5px; min-height:18px; margin-top:-4px;}
+#missedBox{background:var(--navy2); border-radius:16px; padding:14px 26px; max-width:460px;}
+#missedBox h3{font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; font-weight:800;}
+#missedList{display:flex; flex-direction:column; gap:5px; font-family:'Fredoka One',cursive; font-size:19px;}
+#missedBox.empty #missedList::after{content:"Perfect washing! ✨"; color:var(--teal); font-size:17px;}
+.postBtns{display:flex; gap:14px;}
+#countdown{position:absolute; inset:0; z-index:35; display:none; align-items:center; justify-content:center; pointer-events:none;}
+#countdown.on{display:flex;}
+#countNum{font-family:'Fredoka One',cursive; font-size:120px; color:var(--amber); text-shadow:0 6px 0 rgba(0,0,0,.4);
+  animation:cd .9s ease-out;}
+@keyframes cd{0%{transform:scale(2.2); opacity:0;} 30%{transform:scale(1); opacity:1;}}
+#fader{position:fixed; inset:0; background:var(--navy); z-index:60; pointer-events:none; opacity:0; transition:opacity .3s;}
+#fader.on{opacity:1; pointer-events:auto;}
+
+/* ---------- loading overlay ---------- */
+#loader{position:fixed; inset:0; z-index:70; background:var(--navy); display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:22px;}
+#loaderPizza{width:120px; height:120px; border-radius:50%; border:9px solid #c98a4b;
+  background:#5d4327; box-shadow:0 10px 30px rgba(0,0,0,.45), inset 0 0 0 3px #8a5f33;
+  transition:background .25s;}
+#loaderMsg{font-family:'Fredoka One',cursive; font-size:20px; color:var(--amber); letter-spacing:.5px;}
+#loaderMsg::after{content:'…';}
+#loaderSub{color:var(--muted); font-weight:700; font-size:13.5px; margin-top:-12px;}
+#loadingNote{position:absolute; bottom:18px; color:var(--muted); font-weight:700; font-size:14px;}
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="hud">
+  <div id="tickets"></div>
+  <div id="topRight">
+    <div class="pill" id="ordersPill">📋 <span id="ordersVal">0/5</span></div>
+    <div class="pill" id="coinPill">🪙 <span id="coinVal">0</span></div>
+    <div class="pill" id="comboPill">🔥 <span id="comboVal">x2</span></div>
+    <div class="pill" id="timerPill">⏱ <span id="timeVal">0:00</span></div>
+    <button id="muteBtn" title="Sound">🔊</button>
+    <button id="quitBtn" title="Back to menu">🏠</button>
+  </div>
+  <div id="plateCount">🍽️ <span id="plateVal">4</span></div>
+  <div id="hint"></div>
+</div>
+
+<div id="quiz">
+  <div id="quizCard">
+    <div id="quizTitle">🧽 Wash a plate — 3 correct = 1 clean plate</div>
+    <div id="washBar"><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
+    <div id="washLabel">🍽️ 0/3</div>
+    <div id="quizPrompt"></div>
+    <div id="quizSub"></div>
+    <div id="chips"></div>
+    <div id="quizChain"></div>
+    <div class="quizBtns">
+      <button id="quizGo" class="btn-ghost">Keep washing 🧽</button>
+      <button id="quizLater" class="btn-ghost">Later 🍳</button>
+    </div>
+    <div id="quizKeys">press <span class="key">1</span> <span class="key">2</span> <span class="key">3</span> · <span class="key">Esc</span> to leave</div>
+  </div>
+</div>
+
+<div id="countdown"><div id="countNum">3</div></div>
+
+<div id="startScreen" class="screen">
+  <h1 class="logo"><span class="pan">🍳</span>Verb Kitchen</h1>
+  <div class="tagline">Cook fast. Wash smart. Master your irregular verbs!</div>
+  <div class="howto">
+    <div class="row"><span class="ico">🏃</span><span><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> move around your kitchen</span></div>
+    <div class="row"><span class="ico">🥬</span><span><span class="key">E</span> pick up &amp; put down ingredients</span></div>
+    <div class="row"><span class="ico">🔪</span><span><span class="key">Space</span> chop &amp; work stations</span></div>
+    <div class="row"><span class="ico">🍽️</span><span>Serve dishes before patience runs out!</span></div>
+    <div class="row"><span class="ico">🧽</span><span>No clean plates? Wash them — with verbs: <span class="form-base">go</span> → <span class="form-past">went</span> → <span class="form-pp">gone</span></span></div>
+  </div>
+  <button id="charsBtn" class="btn-ghost">🧑‍🍳 Characters</button>
+  <button id="playBtn" class="btn-primary">Play! 🍳</button>
+  <div id="loadingNote"></div>
+</div>
+
+<div id="levelScreen" class="screen hidden">
+  <h1 class="logo" style="font-size:36px;">Choose your shift</h1>
+  <div id="levelGrid"></div>
+  <button id="backBtn" class="btn-ghost">← Back</button>
+</div>
+
+<div id="shopScreen" class="screen hidden">
+  <h1 class="logo" style="font-size:34px;">Characters</h1>
+  <div class="tagline">Earn stars to unlock new chefs — <span id="shopStars" class="form-base">0</span> ⭐ collected</div>
+  <div id="shopGrid"></div>
+  <button id="shopBack" class="btn-ghost">← Back</button>
+</div>
+
+<div id="post" class="screen hidden">
+  <h1 class="logo" id="postTitle" style="font-size:34px;">Shift over!</h1>
+  <div id="postStars"><span>⭐</span><span>⭐</span><span>⭐</span><span class="author">★</span></div>
+  <div class="scoreBig">⏱ <span id="postScore">0:00</span></div>
+  <div class="tagline" id="postCoins"></div>
+  <div class="tagline" id="postBest"></div>
+  <div id="postAuthor"></div>
+  <div id="missedBox"><h3>Verbs to practice</h3><div id="missedList"></div></div>
+  <div class="postBtns">
+    <button id="retryBtn" class="btn-ghost">↻ Retry</button>
+    <button id="nextBtn" class="btn-primary" style="font-size:19px; padding:11px 34px;">Next level →</button>
+    <button id="menuBtn" class="btn-ghost">Levels</button>
+  </div>
+</div>
+
+<div id="recipe" class="hidden">
+  <div id="recipeCard">
+    <div id="recipeTag">New<br>Recipe!</div>
+    <div id="recipeTitle">Recipe</div>
+    <div id="recipeRule"></div>
+    <img id="recipeImg" alt="recipe">
+    <div id="recipeText"></div>
+    <div id="recipeLoader">
+      <div id="recipeLoaderPizza"></div>
+      <div id="recipeLoaderMsg">Heating the ovens</div>
+    </div>
+    <button id="recipeBtn" class="btn-primary" style="font-size:20px; padding:12px 40px;">Let's cook! 🍳</button>
+    <div id="recipeHint">out of clean plates? wash them by answering verb questions 🧽</div>
+  </div>
+</div>
+
+<div id="fader"></div>
+
+<div id="loader" class="hidden">
+  <div id="loaderPizza"></div>
+  <div id="loaderMsg">Rolling the dough</div>
+  <div id="loaderSub">your kitchen is being set up</div>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

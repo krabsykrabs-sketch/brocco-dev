@@ -30,7 +30,7 @@
     lines.push('✗ '+(e.message||(e.error&&e.error.message)||'load failed')
       +(where?(' › '+String(where).replace(location.origin,'')):'')+(e.lineno?(':'+e.lineno):'')); render();
   },true);
-  __diag('build=vendor-4 · origin='+location.origin);   // bump to tell cached vs fresh apart
+  __diag('build=vendor-5 · origin='+location.origin);   // bump to tell cached vs fresh apart
   window.addEventListener('unhandledrejection',function(e){
     var r=e.reason; lines.push('✗ reject: '+((r&&(r.message||r.stack))||r)); render();
   });
@@ -400,18 +400,11 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
   <div id="loaderMsg">Rolling the dough</div>
   <div id="loaderSub">your kitchen is being set up</div>
 </div>
-<!-- Load the entry with a per-load cache-bust token. A caching proxy on some
-     networks served a STALE/poisoned copy of the fixed src/main.js URL, leaving
-     the menu dead even after redeploys; a unique URL each load can never match
-     a stale entry. The relative module graph it imports wasn't poisoned. -->
-<script>
-(function () {
-  var cb = 'cb=' + Date.now().toString(36) + '.' + Math.floor(Math.random() * 1e9).toString(36);
-  var s = document.createElement('script');
-  s.type = 'module';
-  s.src = 'src/main.js?' + cb;
-  document.head.appendChild(s);
-})();
-</script>
+<!-- Entry at a VERSIONED PATH (not a query string). A caching proxy on some
+     networks STRIPS query strings off .js, so ?v / ?cb busting all mapped back
+     to the same poisoned src/main.js. A brand-new path only exists once a
+     deploy is fully live, so it can never be served stale/poisoned. Bump the
+     version (main-vN.js) if it ever gets poisoned during a deploy window. -->
+<script type="module" src="src/main-v5.js"></script>
 </body>
 </html>

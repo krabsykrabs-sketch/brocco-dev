@@ -5,6 +5,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Verb Kitchen 🍳 — Krabsy</title>
+<!-- On-device diagnostics (tablets have no devtools). Classic script so it runs
+     on EVERY browser, even if the ES module / import map fails to load. Surfaces
+     boot errors + a "module never ran" warning. Detailed status only with
+     ?debug=1; genuine errors always show. Tap the box to dismiss. -->
+<script>
+(function(){
+  var lines=[], DEBUG=location.search.indexOf('debug')>=0;
+  function render(){
+    var d=document.getElementById('__diag');
+    if(!d){ d=document.createElement('div'); d.id='__diag';
+      d.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;max-height:55%;'
+        +'overflow:auto;background:rgba(150,0,0,.95);color:#fff;font:12px/1.45 monospace;'
+        +'padding:9px 11px;white-space:pre-wrap;word-break:break-word;';
+      d.addEventListener('click',function(){ d.style.display='none'; });
+      (document.body||document.documentElement).appendChild(d);
+    }
+    d.style.display='block'; d.textContent='VK diagnostics — tap to hide\n'+lines.join('\n');
+  }
+  window.__diag=function(m,force){ lines.push(m); if(DEBUG||force) render(); };
+  window.addEventListener('error',function(e){
+    lines.push('✗ '+(e.message||(e.error&&e.error.message)||'resource load error')
+      +(e.filename?(' @'+String(e.filename).split('/').pop()+(e.lineno?(':'+e.lineno):'')):'')); render();
+  },true);
+  window.addEventListener('unhandledrejection',function(e){
+    var r=e.reason; lines.push('✗ reject: '+((r&&(r.message||r.stack))||r)); render();
+  });
+  __diag('html parsed · importmap='+(window.HTMLScriptElement&&HTMLScriptElement.supports
+    ?HTMLScriptElement.supports('importmap'):'?')+' · esmodules='+('noModule' in HTMLScriptElement.prototype)
+    +' · webgl='+(function(){try{return !!document.createElement('canvas').getContext('webgl');}catch(_){return false;}})()
+    +'\nUA: '+navigator.userAgent);
+  setTimeout(function(){ if(lines.indexOf('main.js: start')<0){
+    lines.push('⚠ main.js never executed — the ES module / import map failed to load on this browser.'); render(); } },6000);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">

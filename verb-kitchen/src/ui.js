@@ -6,6 +6,21 @@ import { characterPortrait } from './portraits.js';
 
 const $ = (id) => document.getElementById(id);
 
+// Robust tap: pointerup (touch/pen) + click, deduped — some tablet browsers
+// don't fire `click` after a touch, which would make level/character cards inert.
+function tap(el, fn) {
+  let viaPointer = false;
+  el.addEventListener('pointerup', (e) => {
+    if (e.pointerType === 'mouse') return;
+    viaPointer = true; setTimeout(() => { viaPointer = false; }, 600);
+    fn(e);
+  });
+  el.addEventListener('click', (e) => {
+    if (viaPointer) { viaPointer = false; return; }
+    fn(e);
+  });
+}
+
 function fmtTime(sec) {
   const t = Math.max(0, Math.round(sec));
   return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
@@ -34,7 +49,7 @@ export const ui = {
       card.innerHTML = `<div class="cportrait"><img alt="${def.name}"></div>` +
         `<div class="cname">${def.name}</div>${tag}` +
         (unlocked ? '' : '<div class="clock">🔒</div>');
-      if (unlocked) { card.style.cursor = 'pointer'; card.addEventListener('click', () => onSelect(id)); }
+      if (unlocked) { card.style.cursor = 'pointer'; tap(card, () => onSelect(id)); }
       grid.appendChild(card);
       characterPortrait(id).then((url) => { const img = card.querySelector('img'); if (img) img.src = url; }).catch(() => {});
     }
@@ -67,7 +82,7 @@ export const ui = {
         `<div class="targets">${targets}</div>`;
       if (!locked) {
         el.style.cursor = 'pointer';
-        el.addEventListener('click', () => onPick(i));
+        tap(el, () => onPick(i));
       }
       grid.appendChild(el);
     });

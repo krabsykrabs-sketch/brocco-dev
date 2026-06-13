@@ -9,6 +9,26 @@ import { seedRng } from './verbs.js';
 import { initQA } from './qa.js';
 import { initTouch } from './touch.js';
 
+const diag = (m, force) => { try { if (window.__diag) window.__diag(m, force); } catch (e) {} };
+diag('main.js: start');   // if this logs, the import map + module graph loaded fine
+
+// Robust tap: bind pointerup (touch/pen) alongside click, deduped — some tablet
+// browsers don't deliver a `click` after a touch, which leaves the menu buttons
+// looking pressed but doing nothing.
+function tap(el, fn) {
+  if (!el) return;
+  let viaPointer = false;
+  el.addEventListener('pointerup', (e) => {
+    if (e.pointerType === 'mouse') return;           // mouse → let the click handler run
+    viaPointer = true; setTimeout(() => { viaPointer = false; }, 600);
+    fn(e);
+  });
+  el.addEventListener('click', (e) => {
+    if (viaPointer) { viaPointer = false; return; }  // already handled on pointerup
+    fn(e);
+  });
+}
+
 const SAVE_KEY = 'krabsy_vkitchen_save';
 
 function loadSave() {
@@ -31,7 +51,14 @@ function persistSave(save) {
 const save = loadSave();
 
 // --- renderer (created once) ---
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  diag('renderer ok');
+} catch (err) {
+  diag('✗ WebGL failed: ' + ((err && err.message) || err), true);   // force-show: this device can't run the 3D
+  throw err;
+}
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
@@ -71,15 +98,12 @@ async function startLevel(idx, opts = {}) {
   ui.fade(false);
 }
 
-document.getElementById('quitBtn').addEventListener('click', () => showLevelSelect());
-document.getElementById('playBtn').addEventListener('click', () => {
-  audio.init();
-  showLevelSelect();
-});
-document.getElementById('backBtn').addEventListener('click', () => ui.showScreen('startScreen'));
-document.getElementById('retryBtn').addEventListener('click', () => startLevel(game.levelIdx));
-document.getElementById('nextBtn').addEventListener('click', () => startLevel(Math.min(game.levelIdx + 1, LEVELS.length - 1)));
-document.getElementById('menuBtn').addEventListener('click', showLevelSelect);
+tap(document.getElementById('quitBtn'), () => showLevelSelect());
+tap(document.getElementById('playBtn'), () => { diag('Play tapped'); audio.init(); showLevelSelect(); });
+tap(document.getElementById('backBtn'), () => ui.showScreen('startScreen'));
+tap(document.getElementById('retryBtn'), () => startLevel(game.levelIdx));
+tap(document.getElementById('nextBtn'), () => startLevel(Math.min(game.levelIdx + 1, LEVELS.length - 1)));
+tap(document.getElementById('menuBtn'), () => showLevelSelect());
 
 // --- character selection (persists; game.preload reads the key) ---
 const CHAR_KEY = 'krabsy_vkitchen_char';
@@ -96,13 +120,15 @@ function pickChar(id) {
   audio.init();
   ui.renderShop(save, selectedChar(), pickChar);   // refresh the "✓ Selected" highlight
 }
-document.getElementById('charsBtn').addEventListener('click', () => {
+tap(document.getElementById('charsBtn'), () => {
+  diag('Characters tapped');
   ui.renderShop(save, selectedChar(), pickChar);
   ui.showScreen('shopScreen');
 });
-document.getElementById('shopBack').addEventListener('click', () => ui.showScreen('startScreen'));
+tap(document.getElementById('shopBack'), () => ui.showScreen('startScreen'));
 
 ui.showScreen('startScreen');
+diag('boot ok · menu shown');
 
 // --- QA mode (?qa=…, ?seed=N) ---
 const params = new URLSearchParams(location.search);

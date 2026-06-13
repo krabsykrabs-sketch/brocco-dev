@@ -25,9 +25,12 @@
   }
   window.__diag=function(m,force){ lines.push(m); if(DEBUG||force) render(); };
   window.addEventListener('error',function(e){
-    lines.push('✗ '+(e.message||(e.error&&e.error.message)||'resource load error')
-      +(e.filename?(' @'+String(e.filename).split('/').pop()+(e.lineno?(':'+e.lineno):'')):'')); render();
+    var t=e.target||{}, u=t.src||t.href||'';                       // the resource that failed to load
+    var where = u || (e.filename||'');
+    lines.push('✗ '+(e.message||(e.error&&e.error.message)||'load failed')
+      +(where?(' › '+String(where).replace(location.origin,'')):'')+(e.lineno?(':'+e.lineno):'')); render();
   },true);
+  __diag('build=vendor-2 · origin='+location.origin);   // bump to tell cached vs fresh apart
   window.addEventListener('unhandledrejection',function(e){
     var r=e.reason; lines.push('✗ reject: '+((r&&(r.message||r.stack))||r)); render();
   });

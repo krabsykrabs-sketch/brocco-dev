@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
 <meta name="robots" content="noindex">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Verb Kitchen 🍳 — Krabsy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,7 +20,7 @@
 }
 *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
 html,body{height:100%; overflow:hidden; background:var(--navy); font-family:'Nunito',sans-serif; color:var(--ink);}
-#app{position:fixed; inset:0;}
+#app{position:fixed; inset:0; touch-action:none;}   /* no pinch-zoom/pan over the game */
 canvas{display:block;}
 button{font-family:inherit; cursor:pointer; border:none;}
 
@@ -124,6 +124,27 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
   border:2px solid rgba(255,255,255,.12); border-radius:999px; padding:8px 22px; font-weight:800; font-size:15px;
   white-space:nowrap; transition:opacity .15s;}
 #hint:empty{opacity:0;}
+/* ---------- touch controls (mobile/tablet only, during play) ---------- */
+/* hidden by default; body.touch (set on touch devices) reveals them. They live
+   inside #hud so they only appear while a round is running. Perf: rgba fills +
+   transform/opacity only — no blur/filter/animated shadows. */
+#touchControls{position:absolute; inset:0; z-index:22; pointer-events:none; display:none;}
+body.touch #touchControls{display:block;}
+#padZone{position:absolute; left:0; bottom:0; width:50%; height:80%; pointer-events:auto; touch-action:none;}
+#padBase{position:absolute; width:132px; height:132px; margin:-66px 0 0 -66px; border-radius:50%;
+  background:rgba(255,255,255,.10); border:2px solid rgba(255,255,255,.22); display:none; pointer-events:none;}
+#padBase.on{display:block;}
+#padKnob{position:absolute; left:50%; top:50%; width:62px; height:62px; margin:-31px 0 0 -31px; border-radius:50%;
+  background:rgba(46,230,192,.5); border:3px solid rgba(255,255,255,.5);}
+#touchBtns{position:absolute; right:20px; bottom:26px; display:flex; gap:18px; align-items:flex-end; pointer-events:none;}
+.tbtn{pointer-events:auto; touch-action:none; -webkit-user-select:none; user-select:none;
+  width:94px; height:94px; border-radius:50%; background:rgba(12,20,48,.8);
+  border:3px solid rgba(255,255,255,.22); color:var(--ink); font-size:30px; line-height:1;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-family:'Nunito',sans-serif; transition:transform .06s ease-out, background-color .06s;}
+.tbtn span{font-size:11px; font-weight:800; margin-top:3px; letter-spacing:.2px;}
+#tBtnChop{width:104px; height:104px; font-size:34px; border-color:rgba(46,230,192,.45);}
+.tbtn.pressed{transform:scale(.9); background:rgba(46,230,192,.42);}
 #plateCount{position:absolute; bottom:14px; left:14px; background:rgba(12,20,48,.88); border:2px solid rgba(255,255,255,.12);
   border-radius:999px; padding:8px 16px; font-weight:800; font-size:15px;}
 #plateCount.zero{border-color:var(--coral); color:var(--coral); animation:pulse .6s infinite;}
@@ -256,6 +277,14 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
   </div>
   <div id="plateCount">🍽️ <span id="plateVal">4</span></div>
   <div id="hint"></div>
+  <div id="touchControls">
+    <div id="padZone"></div>
+    <div id="padBase"><div id="padKnob"></div></div>
+    <div id="touchBtns">
+      <button id="tBtnE" class="tbtn">✋<span>Pick / Drop</span></button>
+      <button id="tBtnChop" class="tbtn">🔪<span>Chop</span></button>
+    </div>
+  </div>
 </div>
 
 <div id="quiz">

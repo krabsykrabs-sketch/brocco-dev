@@ -7,6 +7,7 @@ import { LEVELS } from './levels.js';
 import { charUnlocked } from './models.js';
 import { seedRng } from './verbs.js';
 import { initQA } from './qa.js';
+import { initTouch } from './touch.js';
 
 const SAVE_KEY = 'krabsy_vkitchen_save';
 
@@ -38,6 +39,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.getElementById('app').appendChild(renderer.domElement);
 
 const game = new Game(renderer, save, (g) => persistSave(g.save));
+initTouch(game);   // additive touch input → same game.keys / interactE / spacePress
 
 // --- mute ---
 const muteBtn = document.getElementById('muteBtn');

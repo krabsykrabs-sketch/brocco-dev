@@ -30,7 +30,7 @@
     lines.push('✗ '+(e.message||(e.error&&e.error.message)||'load failed')
       +(where?(' › '+String(where).replace(location.origin,'')):'')+(e.lineno?(':'+e.lineno):'')); render();
   },true);
-  __diag('build=vendor-6 · origin='+location.origin);   // bump to tell cached vs fresh apart
+  __diag('build=vendor-7 · origin='+location.origin);   // bump to tell cached vs fresh apart
   window.addEventListener('unhandledrejection',function(e){
     var r=e.reason; lines.push('✗ reject: '+((r&&(r.message||r.stack))||r)); render();
   });
@@ -39,7 +39,7 @@
     +' · webgl='+(function(){try{return !!document.createElement('canvas').getContext('webgl');}catch(_){return false;}})()
     +'\nUA: '+navigator.userAgent);
   setTimeout(function(){ if(lines.indexOf('main.js: start')<0){
-    lines.push('⚠ main.js never executed — the ES module / import map failed to load on this browser.'); render(); } },6000);
+    lines.push('⚠ main.js never executed — shim-mode fetch of the module graph failed or is very slow.'); render(); } },15000);
   // Probe each critical file exactly as the module loader would, and report what
   // the network/proxy actually returns (status · content-type · first bytes) so
   // we can see if it's a 404, a block/HTML page, a wrong MIME type, or fine JS.
@@ -304,14 +304,28 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 #loaderSub{color:var(--muted); font-weight:700; font-size:13.5px; margin-top:-12px;}
 #loadingNote{position:absolute; bottom:18px; color:var(--muted); font-weight:700; font-size:14px;}
 </style>
-<!-- THREE.js is SELF-HOSTED under vendor/ (relative paths) — NOT a CDN, since a
-     CDN (jsdelivr) is blocked on some networks. Needs native import maps
-     (Chromium 89+/Safari 16.4+), which the target devices have. -->
-<script type="importmap">
+<!-- THREE.js is SELF-HOSTED under vendor/ (relative paths, NOT a CDN). Some
+     networks run a proxy that BREAKS external <script> loads but lets fetch()
+     through (confirmed: every file fetches 200/JS, yet <script src> fails). So
+     load EVERYTHING via es-module-shims "shim mode" (fetch + blob instantiation)
+     and load the shim ITSELF from an in-memory blob — no network <script> at
+     all. The *-shim script types stop the native loader from trying the broken
+     <script> path. -->
+<script>window.esmsInitOptions = { shimMode: true };</script>
+<script type="importmap-shim">
 { "imports": {
     "three": "./vendor/three/three.module.js",
     "three/addons/": "./vendor/three/addons/"
 } }
+</script>
+<script>
+// es-module-shims can't be an external <script> (those loads are broken on the
+// affected networks). fetch() its source (fetch works) and run it from a blob.
+fetch('vendor/es-module-shims.js').then(function (r) { return r.text(); }).then(function (code) {
+  var s = document.createElement('script');
+  s.src = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+  document.head.appendChild(s);
+}).catch(function (e) { if (window.__diag) window.__diag('✗ shim loader: ' + ((e && e.message) || e), true); });
 </script>
 </head>
 <body>
@@ -415,11 +429,14 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
   <div id="loaderMsg">Rolling the dough</div>
   <div id="loaderSub">your kitchen is being set up</div>
 </div>
-<!-- Entry at a VERSIONED PATH (not a query string). A caching proxy on some
+<!-- Entry loaded in es-module-shims SHIM MODE (type=module-shim): the shim
+     fetch()es this + its whole import graph and instantiates via blobs, so the
+     broken <script> path is never used. Versioned path kept from the caching
+     era. A caching proxy on some
      networks STRIPS query strings off .js, so ?v / ?cb busting all mapped back
      to the same poisoned src/main.js. A brand-new path only exists once a
      deploy is fully live, so it can never be served stale/poisoned. Bump the
      version (main-vN.js) if it ever gets poisoned during a deploy window. -->
-<script type="module" src="src/main-v6.js"></script>
+<script type="module-shim" src="src/main-v6.js"></script>
 </body>
 </html>

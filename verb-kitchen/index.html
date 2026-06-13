@@ -5,6 +5,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Verb Kitchen 🍳 — Krabsy</title>
+<!-- FIRST: beat a caching proxy that keys subresources by the page URL (referer)
+     and caches deploy-window 404s. The game plays under ?debug=1 (any query) but
+     not the bare URL, because the bare URL's referer-cache is poisoned. So bounce
+     the bare URL to a UNIQUE ?cb= each load → a fresh referer the proxy can't have
+     poisoned. Runs before anything else loads; self-healing (new token each visit). -->
+<script>
+(function(){
+  try {
+    var u = new URL(location.href);
+    if (!u.searchParams.has('cb') && !u.searchParams.has('debug')) {
+      u.searchParams.set('cb', Date.now().toString(36) + '.' + Math.floor(Math.random() * 1e9).toString(36));
+      location.replace(u.toString());
+    }
+  } catch (e) {}
+})();
+</script>
 <!-- On-device diagnostics (tablets have no devtools). Classic script so it runs
      on EVERY browser, even if the ES module / import map fails to load. Surfaces
      boot errors + a "module never ran" warning. Detailed status only with
@@ -30,7 +46,7 @@
     lines.push('✗ '+(e.message||(e.error&&e.error.message)||'load failed')
       +(where?(' › '+String(where).replace(location.origin,'')):'')+(e.lineno?(':'+e.lineno):'')); render();
   },true);
-  __diag('build=vendor-9 · origin='+location.origin);   // bump to tell cached vs fresh apart
+  __diag('build=vendor-10 · origin='+location.origin+' · '+location.search);   // bump to tell cached vs fresh apart
   window.addEventListener('unhandledrejection',function(e){
     var r=e.reason; lines.push('✗ reject: '+((r&&(r.message||r.stack))||r)); render();
   });

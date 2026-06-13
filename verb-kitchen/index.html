@@ -30,7 +30,7 @@
     lines.push('✗ '+(e.message||(e.error&&e.error.message)||'load failed')
       +(where?(' › '+String(where).replace(location.origin,'')):'')+(e.lineno?(':'+e.lineno):'')); render();
   },true);
-  __diag('build=vendor-2 · origin='+location.origin);   // bump to tell cached vs fresh apart
+  __diag('build=vendor-3 · origin='+location.origin);   // bump to tell cached vs fresh apart
   window.addEventListener('unhandledrejection',function(e){
     var r=e.reason; lines.push('✗ reject: '+((r&&(r.message||r.stack))||r)); render();
   });
@@ -293,10 +293,10 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
      (jsdelivr) is blocked/unreachable on some networks, which made the module
      fail to load and left the menu dead. es-module-shims (also local) keeps the
      import map working on older browsers; it's a no-op where native. -->
-<script async src="./vendor/es-module-shims.js"></script>
+<script async src="./vendor/es-module-shims.js?v=3"></script>
 <script type="importmap">
 { "imports": {
-    "three": "./vendor/three/three.module.js",
+    "three": "./vendor/three/three.module.js?v=3",
     "three/addons/": "./vendor/three/addons/"
 } }
 </script>
@@ -402,6 +402,6 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
   <div id="loaderMsg">Rolling the dough</div>
   <div id="loaderSub">your kitchen is being set up</div>
 </div>
-<script type="module" src="src/main.js"></script>
+<script type="module" src="src/main.js?v=3"></script>
 </body>
 </html>

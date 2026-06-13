@@ -30,7 +30,7 @@
     lines.push('✗ '+(e.message||(e.error&&e.error.message)||'load failed')
       +(where?(' › '+String(where).replace(location.origin,'')):'')+(e.lineno?(':'+e.lineno):'')); render();
   },true);
-  __diag('build=vendor-8 · origin='+location.origin);   // bump to tell cached vs fresh apart
+  __diag('build=vendor-9 · origin='+location.origin);   // bump to tell cached vs fresh apart
   window.addEventListener('unhandledrejection',function(e){
     var r=e.reason; lines.push('✗ reject: '+((r&&(r.message||r.stack))||r)); render();
   });
@@ -47,7 +47,7 @@
     var FILES=['vendor/es-module-shims.js','vendor/three/three.module.js',
       'vendor/three/addons/loaders/GLTFLoader.js','vendor/three/addons/utils/SkeletonUtils.js',
       'vendor/three/addons/utils/BufferGeometryUtils.js',
-      'src/main-v6.js','src/game.js','src/world.js','src/levels.js','src/chef.js','src/stations.js',
+      'src/main-v9.js','src/game.js','src/world.js','src/levels.js','src/chef.js','src/stations.js',
       'src/orders.js','src/recipes.js','src/sink.js','src/fx.js','src/ui.js','src/audio.js',
       'src/verbs.js','src/models.js','src/qa.js','src/portraits.js'];
     var ok=0, done=0, bad=[];
@@ -1503,6 +1503,6 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
      to the same poisoned src/main.js. A brand-new path only exists once a
      deploy is fully live, so it can never be served stale/poisoned. Bump the
      version (main-vN.js) if it ever gets poisoned during a deploy window. -->
-<script type="module-shim" src="src/main-v6.js"></script>
+<script type="module-shim" src="src/main-v9.js"></script>
 </body>
 </html>

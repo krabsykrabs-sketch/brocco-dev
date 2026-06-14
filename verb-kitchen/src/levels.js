@@ -27,9 +27,12 @@ export const LEVELS = [
       'CCbCbCC',
     ],
     crates: { 1: 'lettuce', 2: 'tomato' },
-    orders: ['salad', 'salad', 'salad', 'salad', 'salad'],   // 5 · 2 plates → 3 washes
+    // tutorial level: short + gentle — 3 salads, and the player starts with
+    // 1 clean plate + 1 dirty plate (the dirty one is seeded in game.startLevel)
+    // so the wash-by-grammar loop is introduced right away.
+    orders: ['salad', 'salad', 'salad'],
     spawnEvery: [4, 7],
-    plates: 2,
+    plates: 1,
     starTimes: [150, 115, 85, 62],   // 1★ / 2★ / 3★(gold) / author — placeholders
     tutorial: {
       image: 'assets/ChatGPT/Salad.png',

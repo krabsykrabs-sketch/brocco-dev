@@ -96,6 +96,11 @@ export class Game {
     this.rackStation = this.world.stations.find((s) => s.type === 'rack');
     this.hatchStation = this.world.stations.find((s) => s.type === 'hatch');
     this.rackStation.plates = this.level.plates;
+    // Tutorial (Garden Bistro): seed one dirty plate at the sink so the player
+    // meets the wash-by-grammar loop right away — 1 clean plate + 1 dirty.
+    // Kept in game logic (not a level field) to avoid touching the frozen
+    // level-data shape the parallel level-editor session is built against.
+    this.sinkStation.dirtyPlates = this.level.id === 'garden' ? 1 : 0;
     this.rackStation.refreshStack();
     this.sinkStation.refreshStack();
     for (const s of this.level.startItems || []) {

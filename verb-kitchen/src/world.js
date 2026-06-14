@@ -91,9 +91,13 @@ export class World {
             tool.rotation.set(Math.PI / 2, facing + 0.6, 0);
             tool.position.set(p.x + 0.5, 1.23, p.z - 0.25);
           }
-          staticG.add(counter, board, tool);
+          staticG.add(counter, board);   // counter+board merge; the tool stays LIVE
           st = new Station('board', c, r, p, 1.13);
           st.tool = ch === 'd' ? 'rollingpin' : 'knife';
+          // keep the resting knife / rolling pin as a separate (un-merged) mesh
+          // so it can be hidden while the chef is holding it → reads as the same
+          // tool moving from the board into the hand and back (toggled in game.js)
+          st.toolMesh = tool;
         } else if (ch === 's') {
           const counter = getModel('kitchencounter_straight_B' + sB);
           counter.position.copy(p); counter.rotation.y = facing;
@@ -189,6 +193,7 @@ export class World {
     // live holders + rings
     for (const st of this.stations) {
       this.group.add(st.holder);
+      if (st.toolMesh) this.group.add(st.toolMesh);   // resting board tool (hidden while chopping)
       if (st.type === 'stove' || st.type === 'oven' || st.type === 'board') {
         st.ring = makeRingSprite();
         st.ring.position.set(st.pos.x, st.topY + 1.5, st.pos.z);

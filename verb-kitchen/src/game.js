@@ -448,6 +448,7 @@ export class Game {
 
   workStations(dt) {
     this.chef.working = false;
+    this.chopBoard = null;             // board whose resting tool is "in hand" this frame
     if (!this.keys[' '] || this.questionOpen) return;
     const st = this.targetStation();
     if (st && st.type === 'board' && st.item && st.item.type === 'ing') {
@@ -455,6 +456,8 @@ export class Game {
       if (def.chopTo) {
         this.chef.working = true;
         this.chef.workTool = st.tool || 'knife';
+        this.chopBoard = st;           // hide this board's resting tool while chopping
+
         const before = st.progress;
         st.progress += dt / (def.chopTime || CHOP_TIME);
         if (Math.floor(before * 5) !== Math.floor(st.progress * 5)) audio.chop();
@@ -655,6 +658,9 @@ export class Game {
         }
         if (ev === 'burnt') { this.startSmoke(st); this.fx.pop(st.pos.clone().setY(st.topY + 1), 'burnt! 🔥', 'var(--coral)'); }
       }
+      // the resting board tool vanishes while it's being used (it's "in the
+      // chef's hand") and returns the moment chopping stops
+      if (st.toolMesh) st.toolMesh.visible = (st !== this.chopBoard);
       // cutting-board progress ring
       if (st.type === 'board' && st.ring) {
         const choppable = st.item && st.item.type === 'ing' && ITEMS[st.item.id].chopTo;

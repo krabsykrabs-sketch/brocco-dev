@@ -94,15 +94,15 @@ export function initQA(game, save, startLevel, params) {
 
   (async () => {
     const scene = qa;
-    const lvIdx = { level1: 0, level2: 1, level3: 2, level4: 3, question: 0, burn: 1, stars: 0, recipe: 0, recipeload: 0, washing: 0, shop: 0 }[scene] ?? 0;
+    const lvIdx = { level1: 0, level2: 1, level3: 2, question: 0, burn: 1, stars: 0, recipe: 0, recipeload: 0, washing: 0, shop: 0 }[scene] ?? 0;
     if (scene === 'loading') {       // loader overlay showcase (stays up)
       ui.loading(true);
       window.__VK_READY = true;
       return;
     }
     if (scene === 'menu') {          // level-select showcase with sample progress
-      const fake = { stars: { garden: 4, burger: 3, pizzeria: 1 },
-                     bestTime: { garden: 58, burger: 152, pizzeria: 240 } };
+      const fake = { stars: { garden: 4, burger: 3, pizzapalace: 1 },
+                     bestTime: { garden: 58, burger: 152, pizzapalace: 240 } };
       ui.renderLevelGrid(fake, () => {});
       ui.showScreen('levelScreen');
       window.__VK_READY = true;
@@ -122,7 +122,7 @@ export function initQA(game, save, startLevel, params) {
       const st = game.world.stationAtTile(col, row);
       if (st) st.setItem(item, false);
     };
-    if (scene === 'level1' || scene === 'level2' || scene === 'level3' || scene === 'level4') {
+    if (scene === 'level1' || scene === 'level2' || scene === 'level3') {
       VK.spawnTicket(null);
       VK.spawnTicket(null);
       if (scene === 'level2') {
@@ -132,16 +132,6 @@ export function initQA(game, save, startLevel, params) {
         put(4, 2, makePlate(['bun', 'patty_cooked', 'cheese_chopped', 'lettuce_chopped']));  // big burger
         put(7, 4, makeIngredient('burgerwip_cheese'));   // plate-less: bun + cheese (open, no patty)
         put(2, 5, makeIngredient('cheese_chopped'));     // chopped cheese slice on a board (sits on top)
-      }
-      if (scene === 'level3') {
-        // showcase: order-free pizza states — toppings may go on in ANY order,
-        // incl. cheese on bare dough WITHOUT sauce (left → right complexity)
-        put(3, 0, makeIngredient('dough_base'));                          // bare rolled base
-        put(6, 0, makeIngredient('pizzawip_cheese'));                     // cheese, NO sauce yet
-        put(7, 3, makeIngredient('pizzawip_sauce'));                      // sauce only
-        put(2, 2, makeIngredient('pizzawip_sauce_cheese'));              // raw cheese pizza
-        put(3, 2, makeIngredient('pizzawip_sauce_cheese_mushroom'));     // full raw pizza
-        put(7, 4, makePlate(['pizza_cheese']));                          // baked + plated
       }
       VK.tick(0.5);
     } else if (scene === 'chop') {

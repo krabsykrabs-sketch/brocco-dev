@@ -68,39 +68,12 @@ export const LEVELS = [
     },
   },
   {
-    id: 'pizzeria',
-    num: 3,
-    name: 'Pizzeria',
-    emoji: '🍕',
-    style: 'B',
-    map: [
-      'CHHCooCC',
-      '1......b',
-      '3.CC...b',
-      'C.CC.P.C',
-      '5......C',
-      'CCtCkrCC',
-    ],
-    crates: { 1: 'dough', 3: 'cheese', 5: 'mushroom' },
-    // the reusable ketchup bottle starts on the left counter
-    startItems: [{ c: 0, r: 3, item: 'ketchup' }],
-    orders: ['pizza_cheese', 'pizza_mushroom', 'pizza_cheese', 'pizza_cheese', 'pizza_mushroom'], // 5 · 2 plates → 3 washes
-    spawnEvery: [6, 9],
-    plates: 2,
-    starTimes: [265, 205, 160, 125],   // 1★ / 2★ / 3★(gold) / author — placeholders
-    tutorial: {
-      image: 'assets/ChatGPT/Pizza.png',
-      title: 'Pizza',
-      text: 'Roll the dough, add sauce and cheese (and mushroom if you like), bake it, then serve!',
-    },
-  },
-  {
-    // FIRST editor-made level (Krabsy Level Editor → levels/pizza4.json). The
-    // layout/visuals come from the JSON; the gameplay below is added here, and
-    // stations are inferred from the placed models (see world.buildFromJSON).
-    // Mirrors the Pizzeria; meant to eventually replace it.
+    // Level 3 — the pizza level, made in the Krabsy Level Editor
+    // (levels/pizza4.json). The layout/visuals come from the JSON; the gameplay
+    // below is added here, and stations are inferred from the placed models
+    // (see world.buildFromJSON). Replaced the old ASCII Pizzeria.
     id: 'pizzapalace',
-    num: 4,
+    num: 3,
     name: 'Pizza Palace',
     emoji: '🍕',
     style: 'A',
@@ -122,6 +95,7 @@ export const LEVELS = [
 // Locked "coming soon" slots shown after the 3 playable levels (levels grow to
 // ~10–15; dish themes repeat). Numbers only; emoji is a decorative hint.
 export const PLACEHOLDERS = [
+  { id: 'lv4',  num: 4,  emoji: '🍨' },
   { id: 'lv5',  num: 5,  emoji: '🍲' },
   { id: 'lv6',  num: 6,  emoji: '🥗' },
   { id: 'lv7',  num: 7,  emoji: '🍔' },

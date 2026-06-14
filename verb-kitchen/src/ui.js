@@ -162,8 +162,10 @@ export const ui = {
       ov.classList.remove('hidden');
       const go = () => { btn.removeEventListener('click', go); this.recipeLoading(false); ov.classList.add('hidden'); resolve(); };
       btn.addEventListener('click', go);
-      // everything loaded → swap the pizza animation for the Start button
-      Promise.all([Promise.resolve(loadPromise), imgP]).then(() => {
+      // everything loaded → swap the pizza animation for the Start button.
+      // Tolerate a failed preload/image (a single bad asset must never softlock
+      // the loading screen) — show the button anyway.
+      Promise.all([Promise.resolve(loadPromise).catch(() => {}), imgP]).then(() => {
         this.recipeLoading(false);
         btn.style.display = '';
       });

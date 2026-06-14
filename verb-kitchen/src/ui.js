@@ -131,10 +131,7 @@ export const ui = {
     pill.classList.toggle('on', n >= 2);
     if (n >= 2) $('comboVal').textContent = 'x' + n;
   },
-  setPlates(n) {
-    $('plateVal').textContent = n;
-    $('plateCount').classList.toggle('zero', n === 0);
-  },
+  setPlates() {},   // plate-count HUD removed (the bottom-left counter was noise)
   hint(text) { $('hint').textContent = text || ''; },
 
   /** Recipe card that doubles as the loading screen: framed image + title +

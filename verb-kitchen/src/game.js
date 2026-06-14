@@ -9,6 +9,7 @@ import { makeIngredient, makePlate, buildItemMesh, drawRing } from './stations.j
 import { Orders } from './orders.js';
 import { SinkQuiz } from './sink.js';
 import { FX } from './fx.js';
+import { modelIcon } from './icons.js';
 import { ui } from './ui.js';
 import { audio } from './audio.js';
 
@@ -264,6 +265,8 @@ export class Game {
           const res = this.orders.serve(held.dish);
           if (res) { this.serveSuccess(held, res, st); break; }
         }
+        // trying to send out food that isn't on a plate → show the "use a plate" bubble
+        if (held && held.type === 'ing') this.fx.bubble(st.pos.clone().setY(st.topY + 1.15), [modelIcon('plate')]);
         this.reject(st);
         break;
       }
@@ -308,7 +311,7 @@ export class Game {
         if (wantsBake && (ready || burnt)) {
           if (held && held.type === 'plate' && !held.dirty && held.contents.length === 0) {
             this.takeHotOntoPlate(st, held);
-          } else { this.reject(st); this.fx.bubble(st.pos.clone().setY(st.topY + 1.15), '🍽️'); }
+          } else { this.reject(st); this.fx.bubble(st.pos.clone().setY(st.topY + 1.15), [modelIcon('plate')]); }
           break;
         }
         // 3) take a cooked patty — a plate, or a bun (→ bun+patty). NOT bare hands.
@@ -324,7 +327,7 @@ export class Game {
             this.chef.setCarried(carry, buildItemMesh(carry));
             this.updateSizzle();
             audio.putdown();
-          } else { this.reject(st); this.fx.bubble(st.pos.clone().setY(st.topY + 1.15), '🍽️🍞'); }
+          } else { this.reject(st); this.fx.bubble(st.pos.clone().setY(st.topY + 1.15), [modelIcon('plate'), modelIcon('food_ingredient_bun')]); }
           break;
         }
         // 4) bare-hand take what's left: a burnt patty (→ trash) or a mid-cook item

@@ -92,8 +92,10 @@ export class FX {
   }
 
   /** Speech bubble at a world position — a station "telling" you something
-   *  (e.g. the oven showing 🍽️ "use a plate"). Throttled against key-mashing. */
-  bubble(worldPos, emoji) {
+   *  (e.g. the oven showing a plate "bring a plate"). `icons` is an array of
+   *  image data-URLs (rendered game objects, see icons.js) shown side by side;
+   *  a plain string is treated as emoji text. Throttled against key-mashing. */
+  bubble(worldPos, icons) {
     const now = performance.now();
     if (now < (this._bubbleT || 0)) return;
     this._bubbleT = now + 900;
@@ -105,7 +107,15 @@ export class FX {
     el.className = 'fxbubble';
     el.style.left = x + 'px';
     el.style.top = y + 'px';
-    el.textContent = emoji;
+    if (Array.isArray(icons)) {
+      for (const src of icons) {
+        const img = document.createElement('img');
+        img.src = src; img.alt = '';
+        el.appendChild(img);
+      }
+    } else {
+      el.textContent = icons;   // emoji fallback
+    }
     document.body.appendChild(el);
     setTimeout(() => el.classList.add('out'), 1100);
     setTimeout(() => el.remove(), 1600);

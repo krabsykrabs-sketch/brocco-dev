@@ -1,6 +1,7 @@
 // QA hook (window.__VK) + ?qa= frozen scenes for headless screenshots.
 import { makeIngredient, makePlate, buildItemMesh } from './stations.js';
 import { ITEMS } from './recipes.js';
+import { modelIcon } from './icons.js';
 import { seedRng } from './verbs.js';
 import { ui } from './ui.js';
 
@@ -187,6 +188,19 @@ export function initQA(game, save, startLevel, params) {
       game.score = 250;
       game.quiz.missedThisRound = ['go|past', 'eat|pp'];
       VK.endRound();
+    } else if (scene === 'bubble') {
+      // showcase the help-bubble icons: rendered game objects (plate, bun),
+      // NOT emoji. Built persistently (no auto-remove) for a clean screenshot.
+      VK.tick(0.2); ui.fade(false);     // reveal the kitchen behind the bubbles
+      const showBubble = (icons, left, top) => {
+        const el = document.createElement('div');
+        el.className = 'fxbubble';
+        el.style.left = left + 'px'; el.style.top = top + 'px';
+        for (const src of icons) { const img = document.createElement('img'); img.src = src; img.alt = ''; el.appendChild(img); }
+        document.body.appendChild(el);
+      };
+      showBubble([modelIcon('plate')], 150, 320);                                   // oven / hatch: bring a plate
+      showBubble([modelIcon('plate'), modelIcon('food_ingredient_bun')], 300, 320); // stove: plate or bun
     }
     window.__VK_READY = true;
   })();

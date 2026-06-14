@@ -358,7 +358,11 @@ export class World {
       if (info.type === 'board') {
         st.tool = 'knife';
         const knife = getModel('knife');
-        const ox = 0.5, oz = -0.25, c = Math.cos(facing), s = Math.sin(facing);
+        // place the knife exactly like the ASCII levels do, relative to the
+        // board: there it's world offset (+0.5, -0.25) for boards facing PI,
+        // i.e. board-local (-0.5, 0.25) — rotate that local offset by this
+        // board's facing so it lands the same way at any orientation.
+        const ox = -0.5, oz = 0.25, c = Math.cos(facing), s = Math.sin(facing);
         knife.rotation.set(Math.PI / 2, facing + 0.6, 0);
         knife.position.set(pos.x + ox * c + oz * s, 1.23, pos.z - ox * s + oz * c);
         st.toolMesh = knife;

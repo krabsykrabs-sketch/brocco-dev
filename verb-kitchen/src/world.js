@@ -30,12 +30,18 @@ export class World {
     const sB = lv.style === 'B' ? '_styleB' : '';
     const staticG = new THREE.Group();
 
-    // --- floor: 4×4 KayKit tiles, lay every 2 grid tiles ---
+    // --- floor: 4×4 KayKit tiles laid every 2 grid tiles. On odd-sized levels
+    // the last tile would overhang the kitchen rectangle (e.g. Garden Bistro is
+    // 7×5), so clip edge tiles to the grid bounds — scale to the in-bounds span
+    // and recentre, so no floor pokes out past the counters. ---
     for (let r = 0; r < this.rows; r += 2) {
       for (let c = 0; c < this.cols; c += 2) {
+        const hiC = Math.min(c + 1, this.cols - 1), hiR = Math.min(r + 1, this.rows - 1);
+        const spanC = hiC - c + 1, spanR = hiR - r + 1;   // 1 (clipped) or 2 (full)
         const f = getModel('floor_kitchen' + sB);
-        const p = this.tileWorld(c + 0.5, r + 0.5);
+        const p = this.tileWorld((c + hiC) / 2, (r + hiR) / 2);
         f.position.set(p.x, 0, p.z);
+        f.scale.set(spanC / 2, 1, spanR / 2);
         staticG.add(f);
       }
     }
@@ -143,6 +149,10 @@ export class World {
     for (let cc = hatchMid + 2; cc < this.cols; cc += 2) centers.push(cc);
     let di = 0;
     for (const center of centers) {
+      // drop a 2-wide back-wall piece that would overhang the kitchen's right
+      // edge (the odd-offset window decor on Burger Bar / Pizzeria) — keeps the
+      // level rectangular and a touch narrower
+      if (center > this.cols - 1.5) continue;
       const isHatch = Math.abs(center - hatchMid) < 0.01;
       const name = isHatch ? 'wall_orderwindow' : windowDecor[di++ % windowDecor.length];
       const w = getModel(name);

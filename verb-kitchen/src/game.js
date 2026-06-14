@@ -136,9 +136,13 @@ export class Game {
     const pitch = THREE.MathUtils.degToRad(56);
     const target = new THREE.Vector3(0, 0, -d * 0.06);
     const dir = new THREE.Vector3(0, Math.sin(pitch), Math.cos(pitch));
+    // tight side margin (the kitchen is rectangular now that the floor/wall
+    // overhang is trimmed) so the kitchen fills the portrait width → more zoom;
+    // keep a deeper front/back margin for the back wall + front counters
+    const mx = 0.4;
     const corners = [
-      new THREE.Vector3(-w / 2 - 1, 0, -d / 2 - 1), new THREE.Vector3(w / 2 + 1, 0, -d / 2 - 1),
-      new THREE.Vector3(-w / 2 - 1, 0, d / 2 + 1), new THREE.Vector3(w / 2 + 1, 0, d / 2 + 1),
+      new THREE.Vector3(-w / 2 - mx, 0, -d / 2 - 1), new THREE.Vector3(w / 2 + mx, 0, -d / 2 - 1),
+      new THREE.Vector3(-w / 2 - mx, 0, d / 2 + 1), new THREE.Vector3(w / 2 + mx, 0, d / 2 + 1),
       new THREE.Vector3(0, 4, -d / 2),
     ];
     let dist = 8;

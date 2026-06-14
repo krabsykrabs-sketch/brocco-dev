@@ -42,8 +42,17 @@ export class Game {
       const c = localStorage.getItem('krabsy_vkitchen_char');
       if (c && charUnlocked(c, this.save)) charName = c;
     } catch (e) {}
+    // editor-JSON levels: fetch the scene, preload exactly the models it places
+    // (+ the gameplay item models / board knife) instead of the ASCII set.
+    let decorModels;
+    if (level.jsonUrl) {
+      if (!level.scene) level.scene = await (await fetch(level.jsonUrl, { cache: 'no-cache' })).json();
+      decorModels = [...new Set(level.scene.objects.map((o) => o.model)), 'knife'];
+    } else {
+      decorModels = levelModelNames(level);
+    }
     await Promise.all([
-      preloadRestaurant([...levelModelNames(level), ...itemModelNames()]),
+      preloadRestaurant([...decorModels, ...itemModelNames()]),
       preloadChef(charName),
     ]);
   }
@@ -104,7 +113,7 @@ export class Game {
     this.sinkStation.dirtyPlates = this.level.id === 'garden' ? 1 : 0;
     this.rackStation.refreshStack();
     this.sinkStation.refreshStack();
-    for (const s of this.level.startItems || []) {
+    for (const s of this.world.startItems || []) {
       const st = this.world.stationAtTile(s.c, s.r);
       if (st) st.setItem(makeIngredient(s.item), false);
     }

@@ -94,7 +94,7 @@ export function initQA(game, save, startLevel, params) {
 
   (async () => {
     const scene = qa;
-    const lvIdx = { level1: 0, level2: 1, level3: 2, question: 0, burn: 1, stars: 0, recipe: 0, recipeload: 0, washing: 0, shop: 0 }[scene] ?? 0;
+    const lvIdx = { level1: 0, level2: 1, level3: 2, level4: 3, question: 0, burn: 1, stars: 0, recipe: 0, recipeload: 0, washing: 0, shop: 0 }[scene] ?? 0;
     if (scene === 'loading') {       // loader overlay showcase (stays up)
       ui.loading(true);
       window.__VK_READY = true;
@@ -122,7 +122,7 @@ export function initQA(game, save, startLevel, params) {
       const st = game.world.stationAtTile(col, row);
       if (st) st.setItem(item, false);
     };
-    if (scene === 'level1' || scene === 'level2' || scene === 'level3') {
+    if (scene === 'level1' || scene === 'level2' || scene === 'level3' || scene === 'level4') {
       VK.spawnTicket(null);
       VK.spawnTicket(null);
       if (scene === 'level2') {

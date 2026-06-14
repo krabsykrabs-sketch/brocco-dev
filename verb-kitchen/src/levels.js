@@ -94,12 +94,33 @@ export const LEVELS = [
       text: 'Roll the dough, add sauce and cheese (and mushroom if you like), bake it, then serve!',
     },
   },
+  {
+    // FIRST editor-made level (Krabsy Level Editor → levels/pizza4.json). The
+    // layout/visuals come from the JSON; the gameplay below is added here, and
+    // stations are inferred from the placed models (see world.buildFromJSON).
+    // Mirrors the Pizzeria; meant to eventually replace it.
+    id: 'pizzapalace',
+    num: 4,
+    name: 'Pizza Palace',
+    emoji: '🍕',
+    style: 'A',
+    jsonUrl: 'levels/pizza4.json',
+    spawn: { col: 6, row: 4 },   // chef start in JSON cell coords (editor stores none)
+    orders: ['pizza_cheese', 'pizza_mushroom', 'pizza_cheese', 'pizza_cheese', 'pizza_mushroom'],
+    spawnEvery: [6, 9],
+    plates: 2,
+    starTimes: [265, 205, 160, 125],   // placeholders — tune from playthroughs
+    tutorial: {
+      image: 'assets/ChatGPT/Pizza.png',
+      title: 'Pizza',
+      text: 'Roll the dough, add sauce and cheese (and mushroom if you like), bake it, then serve!',
+    },
+  },
 ];
 
 // Locked "coming soon" slots shown after the 3 playable levels (levels grow to
 // ~10–15; dish themes repeat). Numbers only; emoji is a decorative hint.
 export const PLACEHOLDERS = [
-  { id: 'lv4',  num: 4,  emoji: '🍨' },
   { id: 'lv5',  num: 5,  emoji: '🍲' },
   { id: 'lv6',  num: 6,  emoji: '🥗' },
   { id: 'lv7',  num: 7,  emoji: '🍔' },

@@ -1,0 +1,371 @@
+{
+  "format": "krabsy-level",
+  "version": 1,
+  "catalog": "restaurant-bits",
+  "grid": {
+    "cols": 12,
+    "rows": 12,
+    "tile": 2
+  },
+  "objects": [
+    {
+      "model": "floor_kitchen",
+      "col": 8,
+      "row": 2,
+      "rot": 0
+    },
+    {
+      "model": "floor_kitchen",
+      "col": 6,
+      "row": 2,
+      "rot": 0
+    },
+    {
+      "model": "floor_kitchen",
+      "col": 4,
+      "row": 2,
+      "rot": 0
+    },
+    {
+      "model": "floor_kitchen",
+      "col": 8,
+      "row": 4,
+      "rot": 0
+    },
+    {
+      "model": "floor_kitchen",
+      "col": 6,
+      "row": 4,
+      "rot": 0
+    },
+    {
+      "model": "floor_kitchen",
+      "col": 4,
+      "row": 4,
+      "rot": 0
+    },
+    {
+      "model": "kitchencounter_innercorner_backsplash",
+      "col": 9,
+      "row": 2,
+      "rot": 0
+    },
+    {
+      "model": "kitchencounter_straight_B_backsplash",
+      "col": 4,
+      "row": 5,
+      "rot": 1
+    },
+    {
+      "model": "kitchencounter_straight_A_backsplash",
+      "col": 4,
+      "row": 3,
+      "rot": 1
+    },
+    {
+      "model": "kitchencounter_innercorner_backsplash",
+      "col": 4,
+      "row": 2,
+      "rot": 1
+    },
+    {
+      "model": "kitchencounter_straight_A_backsplash",
+      "col": 8,
+      "row": 2,
+      "rot": 0
+    },
+    {
+      "model": "kitchencounter_straight_A_backsplash",
+      "col": 7,
+      "row": 2,
+      "rot": 0
+    },
+    {
+      "model": "kitchencounter_straight_A_backsplash",
+      "col": 6,
+      "row": 2,
+      "rot": 0
+    },
+    {
+      "model": "kitchencounter_straight_A_backsplash",
+      "col": 5,
+      "row": 2,
+      "rot": 0
+    },
+    {
+      "model": "cuttingboard",
+      "col": 7,
+      "row": 2,
+      "rot": 0
+    },
+    {
+      "model": "floor_kitchen",
+      "col": 8,
+      "row": 6,
+      "rot": 0
+    },
+    {
+      "model": "floor_kitchen",
+      "col": 6,
+      "row": 6,
+      "rot": 0
+    },
+    {
+      "model": "floor_kitchen",
+      "col": 4,
+      "row": 6,
+      "rot": 0
+    },
+    {
+      "model": "kitchencounter_innercorner_backsplash",
+      "col": 4,
+      "row": 7,
+      "rot": 2
+    },
+    {
+      "model": "kitchencounter_straight_A_backsplash",
+      "col": 5,
+      "row": 7,
+      "rot": 2
+    },
+    {
+      "model": "kitchencounter_straight_B_backsplash",
+      "col": 6,
+      "row": 7,
+      "rot": 2
+    },
+    {
+      "model": "kitchencounter_straight_A",
+      "col": 7,
+      "row": 7,
+      "rot": 2
+    },
+    {
+      "model": "kitchencounter_straight_A",
+      "col": 8,
+      "row": 7,
+      "rot": 2
+    },
+    {
+      "model": "kitchencounter_innercorner_backsplash",
+      "col": 9,
+      "row": 7,
+      "rot": 3
+    },
+    {
+      "model": "crate_dough",
+      "col": 9,
+      "row": 6,
+      "rot": 3
+    },
+    {
+      "model": "crate_mushrooms",
+      "col": 9,
+      "row": 4,
+      "rot": 3
+    },
+    {
+      "model": "crate_cheese",
+      "col": 9,
+      "row": 3,
+      "rot": 3
+    },
+    {
+      "model": "kitchencounter_straight_A_backsplash",
+      "col": 9,
+      "row": 5,
+      "rot": 3
+    },
+    {
+      "model": "ketchup",
+      "col": 9,
+      "row": 5,
+      "rot": 3
+    },
+    {
+      "model": "kitchencounter_straight_A_backsplash",
+      "col": 4,
+      "row": 6,
+      "rot": 1
+    },
+    {
+      "model": "pizza_oven",
+      "col": 5,
+      "row": 7,
+      "rot": 2
+    },
+    {
+      "model": "cuttingboard",
+      "col": 6,
+      "row": 2,
+      "rot": 0
+    },
+    {
+      "model": "kitchencounter_sink_backsplash",
+      "col": 4,
+      "row": 4,
+      "rot": 1
+    },
+    {
+      "model": "dishrack",
+      "col": 4,
+      "row": 5,
+      "rot": 3
+    },
+    {
+      "model": "kitchencounter_straight_A",
+      "col": 7,
+      "row": 5,
+      "rot": 2
+    },
+    {
+      "model": "kitchencounter_straight_A",
+      "col": 6,
+      "row": 5,
+      "rot": 2
+    },
+    {
+      "model": "wall_window_closed",
+      "col": 3,
+      "row": 6,
+      "rot": 3,
+      "off": {
+        "x": 0.3,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "model": "wall",
+      "col": 6,
+      "row": 8,
+      "rot": 0,
+      "off": {
+        "x": 0,
+        "y": 0,
+        "z": -0.3
+      }
+    },
+    {
+      "model": "wall_orderwindow",
+      "col": 8,
+      "row": 8,
+      "rot": 0,
+      "off": {
+        "x": 0,
+        "y": 0,
+        "z": -0.3
+      }
+    },
+    {
+      "model": "wall_half",
+      "col": 4,
+      "row": 8,
+      "rot": 0,
+      "off": {
+        "x": 0,
+        "y": 0,
+        "z": -0.3
+      }
+    },
+    {
+      "model": "wall_half",
+      "col": 9,
+      "row": 8,
+      "rot": 0,
+      "off": {
+        "x": 0,
+        "y": 0,
+        "z": -0.3
+      }
+    },
+    {
+      "model": "wall_half",
+      "col": 3,
+      "row": 7,
+      "rot": 3,
+      "off": {
+        "x": 0.3,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "model": "wall",
+      "col": 10,
+      "row": 6,
+      "rot": 1,
+      "off": {
+        "x": -0.3,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "model": "pillar_A",
+      "col": 3,
+      "row": 8,
+      "rot": 1,
+      "off": {
+        "x": 0.7,
+        "y": 0,
+        "z": -0.7
+      }
+    },
+    {
+      "model": "pillar_A",
+      "col": 10,
+      "row": 8,
+      "rot": 1,
+      "off": {
+        "x": -0.7,
+        "y": 0,
+        "z": -0.7
+      }
+    },
+    {
+      "model": "wall_half",
+      "col": 3,
+      "row": 4,
+      "rot": 3,
+      "off": {
+        "x": 0.3,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "model": "kitchencabinet_corner",
+      "col": 9,
+      "row": 7,
+      "rot": 3,
+      "off": {
+        "x": 1,
+        "y": 0.8,
+        "z": 0
+      }
+    },
+    {
+      "model": "kitchencabinet",
+      "col": 9,
+      "row": 6,
+      "rot": 3,
+      "off": {
+        "x": 1,
+        "y": 1.1,
+        "z": 0
+      }
+    },
+    {
+      "model": "towelrail",
+      "col": 4,
+      "row": 4,
+      "rot": 1,
+      "off": {
+        "x": -1.8,
+        "y": 1,
+        "z": 0
+      }
+    }
+  ]
+}

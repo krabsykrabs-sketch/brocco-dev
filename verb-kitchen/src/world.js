@@ -240,7 +240,25 @@ export class World {
     const jcell = (c, r) => ({ x: (c - (jcols - 1) / 2) * T, z: (r - (jrows - 1) / 2) * T });
     const rotY = (v, q) => { const t = q * Math.PI / 2, c = Math.cos(t), s = Math.sin(t);
       return { x: v.x * c + v.z * s, y: v.y, z: -v.x * s + v.z * c }; };
-    const objs = scene.objects;
+    const isCounter = (m) => m.startsWith('kitchencounter_');
+    // counters' WORK-SURFACE height (where boards / racks / items sit). Backsplash
+    // variants measure taller (the splash rises ~0.2 above the surface), so stack
+    // things on the surface — not the bbox top — matching the ASCII levels.
+    const COUNTER_SURFACE = 1.02;
+
+    // optional whole-level rotation: the editor's "front" need not match the
+    // game's fixed camera. Rotate the cell coords (180° supported) so the visual
+    // reconstruction AND the inferred gameplay all land in the same frame.
+    let objs = scene.objects, spawnCell = this.level.spawn;
+    if (this.level.rotate === 2) {
+      const C = jcols, R = jrows;
+      objs = scene.objects.map((o) => {
+        const [w, d] = fp(o.model);
+        return { ...o, col: C - o.col - w, row: R - o.row - d, rot: (o.rot + 2) % 4,
+          off: o.off ? { x: -o.off.x, y: o.off.y, z: -o.off.z } : undefined };
+      });
+      if (spawnCell) spawnCell = { col: C - 1 - spawnCell.col, row: R - 1 - spawnCell.row };
+    }
 
     // pass 1 — stack heights (array order matters)
     const tops = new Map();
@@ -249,7 +267,7 @@ export class World {
       for (let c = o.col; c < o.col + w; c++) for (let r = o.row; r < o.row + d; r++)
         base = Math.max(base, tops.get(c + ',' + r) || 0);
       o._y = base;
-      const top = base + (GROUND.has(o.model) ? 0 : measureModel(o.model).height);
+      const top = base + (GROUND.has(o.model) ? 0 : isCounter(o.model) ? COUNTER_SURFACE : measureModel(o.model).height);
       for (let c = o.col; c < o.col + w; c++) for (let r = o.row; r < o.row + d; r++) tops.set(c + ',' + r, top);
     }
     // pass 2 — world positions (JSON frame, centred on the 12×12 grid)
@@ -358,7 +376,7 @@ export class World {
     }
 
     // --- spawn (not in the JSON; from level.spawn, given in JSON cell coords) ---
-    const sp = this.level.spawn ? toLocal(this.level.spawn.col, this.level.spawn.row)
+    const sp = spawnCell ? toLocal(spawnCell.col, spawnCell.row)
       : { c: Math.floor(this.cols / 2), r: Math.floor(this.rows / 2) };
     this.spawn.copy(this.tileWorld(sp.c, sp.r));
     this.startItems = startItems;

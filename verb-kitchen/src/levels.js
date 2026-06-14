@@ -105,6 +105,7 @@ export const LEVELS = [
     emoji: '🍕',
     style: 'A',
     jsonUrl: 'levels/pizza4.json',
+    rotate: 2,                   // 180° — put the serving hatch at the back (camera convention)
     spawn: { col: 6, row: 4 },   // chef start in JSON cell coords (editor stores none)
     orders: ['pizza_cheese', 'pizza_mushroom', 'pizza_cheese', 'pizza_cheese', 'pizza_mushroom'],
     spawnEvery: [6, 9],

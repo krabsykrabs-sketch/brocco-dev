@@ -10,6 +10,7 @@ import { Orders } from './orders.js';
 import { SinkQuiz } from './sink.js';
 import { FX } from './fx.js';
 import { modelIcon } from './icons.js';
+import { Tutorial } from './tutorial.js';
 import { ui } from './ui.js';
 import { audio } from './audio.js';
 
@@ -106,16 +107,12 @@ export class Game {
     this.rackStation = this.world.stations.find((s) => s.type === 'rack');
     this.hatchStation = this.world.stations.find((s) => s.type === 'hatch');
     this.rackStation.plates = this.level.plates;
-    // Tutorial (Garden Bistro): seed one dirty plate at the sink so the player
-    // meets the wash-by-grammar loop right away — 1 clean plate + 1 dirty.
-    // Kept in game logic (not a level field) to avoid touching the frozen
-    // level-data shape the parallel level-editor session is built against.
-    this.sinkStation.dirtyPlates = this.level.id === 'garden' ? 1 : 0;
+    this.sinkStation.dirtyPlates = 0;
     this.rackStation.refreshStack();
     this.sinkStation.refreshStack();
     for (const s of this.world.startItems || []) {
       const st = this.world.stationAtTile(s.c, s.r);
-      if (st) st.setItem(makeIngredient(s.item), false);
+      if (st) st.setItem(s.item === 'plate' ? makePlate([]) : makeIngredient(s.item), false);
     }
 
     // --- round state ---
@@ -124,10 +121,15 @@ export class Game {
     this.elapsed = 0;                // count-UP clock (deliver all orders fast!)
     this.washProgress = 0;           // correct answers banked toward the next clean plate
     this.washTarget = ANSWERS_PER_PLATE;
+    this.washesCompleted = 0;        // plates fully washed this round (for the tutorial)
     this.questionOpen = false;
     this.plateReturns = [];          // timers for dirty plates in transit
     this.roundOver = false;
     this.lastHint = null;
+
+    // guided step-by-step tutorial on the salad level (banner + pointer arrow)
+    if (this.level.guided) this.tutorial = new Tutorial(this);
+    else { this.tutorial = null; ui.tutorialHide(); }
 
     ui.showScreen(null);
     ui.hud(true);
@@ -523,6 +525,7 @@ export class Game {
     this.washProgress++;
     if (this.washProgress >= ANSWERS_PER_PLATE) {
       this.washProgress = 0;
+      this.washesCompleted++;
       this.sinkStation.dirtyPlates--;
       this.sinkStation.refreshStack();
       this.rackStation.plates++;
@@ -700,6 +703,7 @@ export class Game {
     this.world.highlight.visible = !!st;
     if (st) this.world.highlight.position.set(st.pos.x, 1.12, st.pos.z);
 
+    if (this.tutorial) this.tutorial.update(dt);
     this.refreshHint();
     this.fx.update(dt);
   }

@@ -27,12 +27,16 @@ export const LEVELS = [
       'CCbCbCC',
     ],
     crates: { 1: 'lettuce', 2: 'tomato' },
-    // tutorial level: short + gentle — 3 salads, and the player starts with
-    // 1 clean plate + 1 dirty plate (the dirty one is seeded in game.startLevel)
-    // so the wash-by-grammar loop is introduced right away.
+    // GUIDED tutorial level (see tutorial.js): a step-by-step walkthrough of the
+    // first salad — grab → chop → plate → repeat → serve → wash — then free play
+    // for the other 2. Starts with one empty clean plate already on a counter
+    // (startItems) and an empty rack, so washing the served plate is the only
+    // way to make salads 2 & 3.
+    guided: true,
     orders: ['salad', 'salad', 'salad'],
     spawnEvery: [4, 7],
-    plates: 1,
+    plates: 0,
+    startItems: [{ c: 3, r: 2, item: 'plate' }],
     starTimes: [150, 115, 85, 62],   // 1★ / 2★ / 3★(gold) / author — placeholders
     tutorial: {
       image: 'assets/ChatGPT/Salad.png',

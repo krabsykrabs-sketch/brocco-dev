@@ -134,6 +134,26 @@ export const ui = {
   setPlates() {},   // plate-count HUD removed (the bottom-left counter was noise)
   hint(text) { $('hint').textContent = text || ''; },
 
+  // --- guided tutorial banner (salad level) ---
+  tutorialStep(icon, text, n, total) {
+    const el = $('tutorial');
+    el.classList.remove('done');
+    el.innerHTML = `<div class="tStep">Step ${n} of ${total}</div>` +
+      `<div class="tBody"><span class="tIcon">${icon}</span><span>${text}</span></div>`;
+    el.classList.remove('on'); void el.offsetWidth;   // restart the slide-in
+    el.classList.add('on');
+  },
+  tutorialDone(text) {
+    const el = $('tutorial');
+    el.classList.add('done');
+    el.innerHTML = `<div class="tBody"><span class="tIcon">✅</span><span>${text}</span></div>`;
+    el.classList.remove('on'); void el.offsetWidth;
+    el.classList.add('on');
+    clearTimeout(this._tutT);
+    this._tutT = setTimeout(() => el.classList.remove('on'), 5200);
+  },
+  tutorialHide() { clearTimeout(this._tutT); $('tutorial').classList.remove('on'); },
+
   /** Recipe card that doubles as the loading screen: framed image + title +
    *  instruction, with a pizza-building animation in place of the button until
    *  `loadPromise` (assets + image) resolves. Resolves when the player taps Start. */

@@ -62,7 +62,7 @@ export const LEVELS = [
     plates: 2,
     starTimes: [215, 165, 130, 100],   // 1★ / 2★ / 3★(gold) / author — placeholders
     tutorial: {
-      // image: 'assets/ChatGPT/Burger.png',   // add when the image is ready
+      image: 'assets/ChatGPT/Burger.png',
       title: 'Burger',
       text: 'Cook a patty on a bun for a hamburger — add cheese for a cheeseburger, plus lettuce for a Big Burger!',
     },

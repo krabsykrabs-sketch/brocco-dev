@@ -18,25 +18,19 @@ export const LEVELS = [
     num: 1,
     name: 'Garden Bistro',
     emoji: '🥗',
-    style: 'A',
-    map: [
-      'CHHCrkC',
-      '1.....C',
-      '2.CC..C',
-      'C...P.C',
-      'CCbCbCC',
-    ],
-    crates: { 1: 'lettuce', 2: 'tomato' },
-    // GUIDED tutorial level (see tutorial.js): a step-by-step walkthrough of the
-    // first salad — grab → chop → plate → repeat → serve → wash — then free play
-    // for the other 2. Starts with one empty clean plate already on a counter
-    // (startItems) and an empty rack, so washing the served plate is the only
-    // way to make salads 2 & 3.
+    // GUIDED tutorial level (see tutorial.js) — now an editor JSON layout
+    // (levels/salad1.json). Step-by-step walkthrough of the first salad — grab →
+    // chop → plate → repeat → serve → wash — then free play for the other 2.
+    // Starts with one clean plate on a counter, an empty rack, and one dirty
+    // plate at the sink (1 clean + 1 dirty), so washing is load-bearing.
+    jsonUrl: 'levels/salad1.json',
+    rotate: 2,                   // 180° — serving hatch at the back (camera convention)
+    spawn: { col: 6, row: 4 },   // chef start in JSON cell coords
     guided: true,
     orders: ['salad', 'salad', 'salad'],
     spawnEvery: [4, 7],
     plates: 0,
-    startItems: [{ c: 3, r: 2, item: 'plate' }],
+    startItems: [{ c: 7, r: 4, item: 'plate' }],   // clean plate pre-placed on a counter (JSON cell coords)
     startDirty: 1,   // one dirty plate already at the sink (1 clean + 1 dirty to start)
     starTimes: [150, 115, 85, 62],   // 1★ / 2★ / 3★(gold) / author — placeholders
     tutorial: {
@@ -74,7 +68,7 @@ export const LEVELS = [
   },
   {
     // Level 3 — the pizza level, made in the Krabsy Level Editor
-    // (levels/pizza4.json). The layout/visuals come from the JSON; the gameplay
+    // (levels/pizza3.json). The layout/visuals come from the JSON; the gameplay
     // below is added here, and stations are inferred from the placed models
     // (see world.buildFromJSON). Replaced the old ASCII Pizzeria.
     id: 'pizzapalace',
@@ -82,9 +76,13 @@ export const LEVELS = [
     name: 'Pizza Palace',
     emoji: '🍕',
     style: 'A',
-    jsonUrl: 'levels/pizza4.json',
+    jsonUrl: 'levels/pizza3.json',
     rotate: 2,                   // 180° — put the serving hatch at the back (camera convention)
     spawn: { col: 6, row: 4 },   // chef start in JSON cell coords (editor stores none)
+    // pizza3.json no longer includes the ketchup/sauce bottle (pizza4 had one at
+    // 9,5) — without a sauce source no pizza can bake, so re-add it as a start
+    // item on that counter. Remove if the editor exports it again.
+    startItems: [{ c: 9, r: 5, item: 'ketchup' }],
     orders: ['pizza_cheese', 'pizza_mushroom', 'pizza_cheese', 'pizza_cheese', 'pizza_mushroom'],
     spawnEvery: [6, 9],
     plates: 2,

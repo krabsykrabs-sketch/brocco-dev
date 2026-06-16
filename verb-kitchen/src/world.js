@@ -300,12 +300,13 @@ export class World {
     const toLocal = (c, r) => ({ c: c - minC, r: r - minR });
 
     // --- classify station tiles, collect floor tiles / start items / hatch anchor ---
-    const PRI = { counter: 0, sink: 1, oven: 1, board: 1, rack: 1, crate: 1 };
+    const PRI = { counter: 0, sink: 1, oven: 1, board: 1, rack: 1, crate: 1, trash: 1 };
     const typeOf = (m) => {
       if (m.startsWith('kitchencounter_sink')) return 'sink';
       if (m === 'pizza_oven' || m === 'oven') return 'oven';
       if (m === 'cuttingboard') return 'board';
       if (m === 'dishrack') return 'rack';
+      if (m === 'crate') return 'trash';          // an EMPTY crate = trash bin (like the burger level)
       if (m.startsWith('crate_')) return 'crate';
       if (m.startsWith('kitchencounter_')) return 'counter';
       return null;
@@ -338,17 +339,21 @@ export class World {
     // --- place every model (faithful visual). ketchup is a pickable start item;
     //     the board knife is added live below so it can hide while chopping. ---
     const staticG = new THREE.Group();
+    const TOOLS = new Set(['knife', 'rollingpin']);   // board tools are auto-added live below
     for (const o of objs) {
-      if (o.model === 'ketchup') continue;
-      const mdl = getModel(o.model);
+      if (o.model === 'ketchup' || TOOLS.has(o.model)) continue;
+      // an empty `crate` is a trash bin — tint it dark blue-grey + shrink like the ASCII levels
+      const mdl = getModel(o.model, o.model === 'crate' ? '#4a5366' : null);
+      if (o.model === 'crate') mdl.scale.setScalar(0.92);
       mdl.position.set(o._pos.x, o._pos.y, o._pos.z);
-      mdl.rotation.y = o.rot * Math.PI / 2;
+      mdl.rotation.set((o.rotX || 0) * Math.PI / 180, o.rot * Math.PI / 2, 0);
       staticG.add(mdl);
     }
 
     // --- stations from the classified tiles ---
-    const TOP_Y = { counter: 1.02, hatch: 1.02, crate: 1.05, board: 1.13, oven: 1.0, sink: 1.02, rack: 1.12 };
+    const TOP_Y = { counter: 1.02, hatch: 1.02, crate: 1.05, board: 1.13, oven: 1.0, sink: 1.02, rack: 1.12, trash: 1.0 };
     for (const [key, info] of tileStation) {
+      if (!floorTiles.has(key)) continue;   // pieces off the kitchen floor (e.g. an oven behind the wall) are decor only
       const [lc, lr] = key.split(',').map(Number);
       const pos = this.tileWorld(lc, lr);
       const facing = this.faceToFloor(lc, lr);
@@ -383,7 +388,15 @@ export class World {
     const sp = spawnCell ? toLocal(spawnCell.col, spawnCell.row)
       : { c: Math.floor(this.cols / 2), r: Math.floor(this.rows / 2) };
     this.spawn.copy(this.tileWorld(sp.c, sp.r));
+    // start items: the ketchup derived above PLUS any the level declares (e.g. a
+    // pre-placed plate for the tutorial), given in JSON cell coords like spawn.
     this.startItems = startItems;
+    for (const s of (this.level.startItems || [])) {
+      let c = s.c, r = s.r;
+      if (this.level.rotate === 2) { c = jcols - 1 - s.c; r = jrows - 1 - s.r; }
+      const l = toLocal(c, r);
+      this.startItems.push({ c: l.c, r: l.r, item: s.item });
+    }
 
     this._finishStatic(staticG);
   }

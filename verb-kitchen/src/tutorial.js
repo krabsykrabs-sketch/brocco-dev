@@ -46,7 +46,11 @@ export class Tutorial {
   update(dt) {
     this.t += dt;
     if (!this.done) {
-      while (this.i < this.steps.length && this.steps[this.i].test()) {
+      // advance past a step when its milestone — OR any LATER one — is reached,
+      // so a transient milestone (e.g. only briefly carrying the lettuce) or
+      // doing things out of order can't stall the walkthrough.
+      const laterDone = (k) => { for (let j = k + 1; j < this.steps.length; j++) if (this.steps[j].test()) return true; return false; };
+      while (this.i < this.steps.length && (this.steps[this.i].test() || laterDone(this.i))) {
         this.i++;
         if (this.i < this.steps.length) this.show();
       }

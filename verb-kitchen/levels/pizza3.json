@@ -87,12 +87,6 @@
       "rot": 0
     },
     {
-      "model": "kitchencounter_straight_A_backsplash",
-      "col": 5,
-      "row": 2,
-      "rot": 0
-    },
-    {
       "model": "cuttingboard",
       "col": 7,
       "row": 2,
@@ -119,12 +113,6 @@
     {
       "model": "kitchencounter_innercorner_backsplash",
       "col": 4,
-      "row": 7,
-      "rot": 2
-    },
-    {
-      "model": "kitchencounter_straight_A_backsplash",
-      "col": 5,
       "row": 7,
       "rot": 2
     },
@@ -177,22 +165,10 @@
       "rot": 3
     },
     {
-      "model": "ketchup",
-      "col": 9,
-      "row": 5,
-      "rot": 3
-    },
-    {
       "model": "kitchencounter_straight_A_backsplash",
       "col": 4,
       "row": 6,
       "rot": 1
-    },
-    {
-      "model": "pizza_oven",
-      "col": 5,
-      "row": 7,
-      "rot": 2
     },
     {
       "model": "cuttingboard",
@@ -366,6 +342,30 @@
         "y": 1,
         "z": 0
       }
+    },
+    {
+      "model": "crate",
+      "col": 5,
+      "row": 2,
+      "rot": 2
+    },
+    {
+      "model": "kitchencounter_straight_A",
+      "col": 5,
+      "row": 7,
+      "rot": 2
+    },
+    {
+      "model": "oven",
+      "col": 5,
+      "row": 9,
+      "rot": 2
+    },
+    {
+      "model": "pizza_oven",
+      "col": 5,
+      "row": 7,
+      "rot": 2
     }
   ]
 }

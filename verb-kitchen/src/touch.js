@@ -46,7 +46,19 @@ export function initTouch(game) {
     }
     if (!p) { p = new THREE.Vector3(); if (!_ray.ray.intersectPlane(_plane, p)) return null; }
     const W = game.world;
-    const col = Math.round(p.x / TILE + W.offX), row = Math.round(p.z / TILE + W.offZ);
+    let col = Math.round(p.x / TILE + W.offX), row = Math.round(p.z / TILE + W.offZ);
+    // A tall piece (oven, sink, wall) is hit high up on its body, and that
+    // surface point can round to the wrong tile — so it feels like you must tap
+    // high. When the hit is well above counter height, snap to the nearest
+    // station: the tap then targets the counter surface beneath the tall piece.
+    if (p.y > 1.4) {
+      let best = null, bd = (TILE * 1.15) ** 2;
+      for (const s of W.stations) {
+        const d = (s.pos.x - p.x) ** 2 + (s.pos.z - p.z) ** 2;
+        if (d < bd) { bd = d; best = s; }
+      }
+      if (best) { col = best.col; row = best.row; }
+    }
     if (col < 0 || row < 0 || col >= W.cols || row >= W.rows) return null;
     return { col, row, station: W.stationAtTile(col, row) };
   }
@@ -160,6 +172,7 @@ export function initTouch(game) {
     // hold = backdate the press so arrival already counts as a sustained hold → chop
     holdTile: (col, row) => { if (chopping) { game.keys[' '] = false; chopping = false; } chopArmed = false; touchDown = true; downAt = performance.now() - 10000; startNav({ col, row, station: game.world.stationAtTile(col, row) }); },
     release: navEnd,
+    pick: (x, y) => pickTile(x, y),   // screen px → resolved tile/station (for tests)
     step: () => { resolveArm(); if (nav) steer(); },
     getNav: () => (nav ? { i: nav.i, len: nav.path.length, station: nav.station ? [nav.station.col, nav.station.row, nav.station.type] : null, board: nav.board } : null),
     armed: () => chopArmed,

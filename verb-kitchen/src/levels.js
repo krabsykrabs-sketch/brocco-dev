@@ -37,6 +37,7 @@ export const LEVELS = [
     spawnEvery: [4, 7],
     plates: 0,
     startItems: [{ c: 3, r: 2, item: 'plate' }],
+    startDirty: 1,   // one dirty plate already at the sink (1 clean + 1 dirty to start)
     starTimes: [150, 115, 85, 62],   // 1★ / 2★ / 3★(gold) / author — placeholders
     tutorial: {
       image: 'assets/ChatGPT/Salad.png',

@@ -107,7 +107,7 @@ export class Game {
     this.rackStation = this.world.stations.find((s) => s.type === 'rack');
     this.hatchStation = this.world.stations.find((s) => s.type === 'hatch');
     this.rackStation.plates = this.level.plates;
-    this.sinkStation.dirtyPlates = 0;
+    this.sinkStation.dirtyPlates = this.level.startDirty || 0;   // start with a dirty plate to wash
     this.rackStation.refreshStack();
     this.sinkStation.refreshStack();
     for (const s of this.world.startItems || []) {

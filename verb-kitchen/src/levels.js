@@ -93,12 +93,53 @@ export const LEVELS = [
       text: 'Roll the dough, add sauce and cheese (and mushroom if you like), bake it, then serve!',
     },
   },
+  {
+    // Level 4 — CO-OP TEST: an exact copy of Burger Bar (level 2) plus a bot
+    // kitchen helper. The helper owns the two cutting boards: it fetches raw
+    // cheese / lettuce, chops each on its dedicated board, and parks the slice
+    // on the counter to the RIGHT of that board (col+1). It is demand-driven
+    // (only cuts what the orders need) and keeps at most one slice per board
+    // (par=1). It never cooks, plates, serves or washes — see helper.js.
+    // The `coop` block lives entirely in code (not the editor JSON schema).
+    id: 'burger_coop',
+    num: 4,
+    name: 'Burger Bar Co-op',
+    emoji: '🤝',
+    style: 'A',
+    map: [
+      'CHHCCkrC',
+      '1......s',
+      '2.CCC..s',
+      '3..P...C',
+      '4......C',
+      'CCbCbCtC',
+    ],
+    crates: { 1: 'bun', 2: 'patty_raw', 3: 'lettuce', 4: 'cheese' },
+    orders: ['hamburger', 'cheeseburger', 'hamburger', 'bigburger', 'cheeseburger'],
+    spawnEvery: [5, 8],
+    plates: 2,
+    starTimes: [215, 165, 130, 100],   // copied from Burger Bar — placeholders
+    tutorial: {
+      image: 'assets/ChatGPT/Burger.png',
+      title: 'Burger Bar — with a helper!',
+      text: 'A kitchen helper preps your cheese and lettuce on the cutting boards — focus on cooking the patties, building the burgers, serving and washing up!',
+    },
+    coop: {
+      char: 'knight',                  // helper character (player defaults to rogue)
+      spawn: { col: 2, row: 4 },       // helper starts near its boards
+      // left board (col 2) = lettuce, right board (col 4) = cheese; each stages
+      // onto the counter immediately to its right (col 3 / col 5).
+      stations: [
+        { ingredient: 'lettuce', board: { col: 2, row: 5 }, staging: { col: 3, row: 5 } },
+        { ingredient: 'cheese',  board: { col: 4, row: 5 }, staging: { col: 5, row: 5 } },
+      ],
+    },
+  },
 ];
 
 // Locked "coming soon" slots shown after the 3 playable levels (levels grow to
 // ~10–15; dish themes repeat). Numbers only; emoji is a decorative hint.
 export const PLACEHOLDERS = [
-  { id: 'lv4',  num: 4,  emoji: '🍨' },
   { id: 'lv5',  num: 5,  emoji: '🍲' },
   { id: 'lv6',  num: 6,  emoji: '🥗' },
   { id: 'lv7',  num: 7,  emoji: '🍔' },

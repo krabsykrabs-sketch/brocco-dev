@@ -94,7 +94,7 @@ export function initQA(game, save, startLevel, params) {
 
   (async () => {
     const scene = qa;
-    const lvIdx = { level1: 0, level2: 1, level3: 2, question: 0, burn: 1, stars: 0, recipe: 0, recipeload: 0, washing: 0, shop: 0 }[scene] ?? 0;
+    const lvIdx = { level1: 0, level2: 1, level3: 2, level4: 3, coop: 3, question: 0, burn: 1, stars: 0, recipe: 0, recipeload: 0, washing: 0, shop: 0 }[scene] ?? 0;
     if (scene === 'loading') {       // loader overlay showcase (stays up)
       ui.loading(true);
       window.__VK_READY = true;
@@ -134,6 +134,12 @@ export function initQA(game, save, startLevel, params) {
         put(2, 5, makeIngredient('cheese_chopped'));     // chopped cheese slice on a board (sits on top)
       }
       VK.tick(0.5);
+    } else if (scene === 'coop') {
+      // co-op helper showcase: orders that need cheese + lettuce, then let the
+      // helper fetch → chop → stage a few cycles (deterministic, no RNG in the bot)
+      VK.spawnTicket('cheeseburger');
+      VK.spawnTicket('bigburger');
+      VK.tick(14);   // long enough for the helper to stage both cheese + lettuce
     } else if (scene === 'chop') {
       // frozen mid-chop: progress bar visible over the cutting board
       const board = game.world.stations.find((s) => s.type === 'board');

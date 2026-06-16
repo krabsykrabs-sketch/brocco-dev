@@ -1,10 +1,11 @@
 // Core game orchestrator: scene, loop, interactions, scoring, round flow.
 import * as THREE from 'three';
-import { TILE, preloadRestaurant, charUnlocked } from './models.js';
+import { TILE, preloadRestaurant, charUnlocked, loadChefAssets } from './models.js';
 import { ITEMS, DISHES, matchDish, canPlate, combine, itemModelNames } from './recipes.js';
 import { LEVELS, levelModelNames } from './levels.js';
 import { World } from './world.js';
 import { Chef, preloadChef } from './chef.js';
+import { Helper } from './helper.js';
 import { makeIngredient, makePlate, buildItemMesh, drawRing } from './stations.js';
 import { Orders } from './orders.js';
 import { SinkQuiz } from './sink.js';
@@ -52,10 +53,14 @@ export class Game {
     } else {
       decorModels = levelModelNames(level);
     }
-    await Promise.all([
+    const tasks = [
       preloadRestaurant([...decorModels, ...itemModelNames()]),
       preloadChef(charName),
-    ]);
+    ];
+    // co-op levels load a SECOND character for the helper (kept apart from the
+    // player's so the two chefs read as different people)
+    if (level.coop) tasks.push(loadChefAssets(level.coop.char).then((a) => { this._helperAssets = a; }));
+    await Promise.all(tasks);
   }
 
   async startLevel(levelIdx, opts = {}) {
@@ -98,6 +103,17 @@ export class Game {
     this.chef = new Chef(this.world);
     this.chef.pos.copy(this.world.spawn);
     this.scene.add(this.chef.obj);
+
+    // co-op helper: a second chef driven by a bot brain (see helper.js)
+    if (this.level.coop) {
+      const hc = new Chef(this.world, this._helperAssets);
+      const sp = this.level.coop.spawn;
+      hc.pos.copy(sp ? this.world.tileWorld(sp.col, sp.row) : this.world.spawn);
+      this.scene.add(hc.obj);
+      this.helper = new Helper(this, hc, this.level.coop);
+    } else {
+      this.helper = null;
+    }
 
     this.fx = new FX(this.scene, this.camera, this.renderer);
     this.quiz = new SinkQuiz(this);
@@ -650,7 +666,11 @@ export class Game {
   }
 
   update(dt) {
-    if (this.roundOver) { this.chef.update(dt, { x: 0, z: 0 }, this.fx); this.fx.update(dt); return; }
+    if (this.roundOver) {
+      this.chef.update(dt, { x: 0, z: 0 }, this.fx);
+      if (this.helper) this.helper.chef.update(dt, { x: 0, z: 0 }, this.fx);
+      this.fx.update(dt); return;
+    }
 
     // count-UP clock — keeps running during sink questions, so quick verb
     // recall (and not dawdling at the sink) earns a better time
@@ -659,6 +679,7 @@ export class Game {
 
     this.chef.update(dt, this.questionOpen ? { x: 0, z: 0 } : this.inputVector(), this.fx);
     this.workStations(dt);
+    if (this.helper) this.helper.update(dt);
 
     // stations (cooking pauses during questions)
     for (const st of this.world.stations) {
@@ -671,8 +692,9 @@ export class Game {
         if (ev === 'burnt') { this.startSmoke(st); this.fx.pop(st.pos.clone().setY(st.topY + 1), 'burnt! 🔥', 'var(--coral)'); }
       }
       // the resting board tool vanishes while it's being used (it's "in the
-      // chef's hand") and returns the moment chopping stops
-      if (st.toolMesh) st.toolMesh.visible = (st !== this.chopBoard);
+      // chef's hand") and returns the moment chopping stops — for the player AND
+      // the co-op helper's board
+      if (st.toolMesh) st.toolMesh.visible = (st !== this.chopBoard && !(this.helper && st === this.helper.chopBoard));
       // cutting-board progress ring
       if (st.type === 'board' && st.ring) {
         const choppable = st.item && st.item.type === 'ing' && ITEMS[st.item.id].chopTo;

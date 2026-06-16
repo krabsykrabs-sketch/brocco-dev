@@ -127,6 +127,7 @@ export const LEVELS = [
     coop: {
       char: 'knight',                  // helper character (player defaults to rogue)
       spawn: { col: 2, row: 4 },       // helper starts near its boards
+      idle: { col: 1, row: 4 },        // parks here (bottom-left) when both boards are stocked
       // left board (col 2) = lettuce, right board (col 4) = cheese; each stages
       // onto the counter immediately to its right (col 3 / col 5).
       stations: [

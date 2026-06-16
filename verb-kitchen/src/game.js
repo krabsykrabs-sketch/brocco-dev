@@ -500,6 +500,22 @@ export class Game {
     }
   }
 
+  // Two chefs can't slide through each other: push the player + helper apart
+  // when their bodies overlap (axis-separated so neither shoves into a wall).
+  resolveChefCollision() {
+    const a = this.chef, b = this.helper.chef;
+    const dx = a.pos.x - b.pos.x, dz = a.pos.z - b.pos.z;
+    let d = Math.hypot(dx, dz);
+    const MIN = 0.92;                       // min centre distance (~2× body radius)
+    if (d >= MIN) return;
+    let ux, uz;
+    if (d < 1e-4) { ux = 1; uz = 0; }       // exactly stacked → split along x
+    else { ux = dx / d; uz = dz / d; }
+    const push = (MIN - d) / 2 + 0.002;
+    a.tryMove(ux * push, 0); a.tryMove(0, uz * push);
+    b.tryMove(-ux * push, 0); b.tryMove(0, -uz * push);
+  }
+
   // ---------- serving / scoring ----------
   serveSuccess(plate, res, hatch) {
     const d = DISHES[plate.dish];
@@ -679,7 +695,7 @@ export class Game {
 
     this.chef.update(dt, this.questionOpen ? { x: 0, z: 0 } : this.inputVector(), this.fx);
     this.workStations(dt);
-    if (this.helper) this.helper.update(dt);
+    if (this.helper) { this.helper.update(dt); this.resolveChefCollision(); }
 
     // stations (cooking pauses during questions)
     for (const st of this.world.stations) {

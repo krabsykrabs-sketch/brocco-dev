@@ -135,11 +135,9 @@ export function initQA(game, save, startLevel, params) {
       }
       VK.tick(0.5);
     } else if (scene === 'coop') {
-      // co-op helper showcase: orders that need cheese + lettuce, then let the
-      // helper fetch → chop → stage a few cycles (deterministic, no RNG in the bot)
-      VK.spawnTicket('cheeseburger');
-      VK.spawnTicket('bigburger');
-      VK.tick(14);   // long enough for the helper to stage both cheese + lettuce
+      // co-op helper showcase: with no demand gate it stocks both boards, then
+      // parks in the bottom-left idle corner (deterministic — no RNG in the bot).
+      VK.tick(16);
     } else if (scene === 'chop') {
       // frozen mid-chop: progress bar visible over the cutting board
       const board = game.world.stations.find((s) => s.type === 'board');

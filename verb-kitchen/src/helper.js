@@ -1,17 +1,20 @@
 // Co-op kitchen helper (the first multiplayer experiment — a BOT teammate).
 // Drives a SECOND Chef through a tiny state machine:
-//   idle → toCrate → toBoard → chopping → toStaging → idle
+//   toIdle/idle → toCrate → toBoard → chopping → toStaging → toIdle …
 // It fetches raw cheese / lettuce from the crates, chops each on its OWN
 // dedicated board, and parks the finished slice on the counter to the RIGHT of
 // that board. Two rules, both chosen by the user:
-//   • demand-driven — it only cuts what the orders on screen actually need;
+//   • always stocked — it keeps BOTH boards topped up regardless of the orders,
+//     refilling the instant the player takes a slice;
 //   • par = 1 — at most one cut slice staged per board at a time.
+// When both boards are stocked it walks to an idle corner and waits there,
+// out of the player's way (config.idle).
 // It NEVER cooks, plates, serves or washes — the human owns assembly and the
 // sink (so the grammar stays 100% with the player). This is deliberately a
 // dumb, predictable, station-bound bot: the "second seat" abstraction that a
 // remote human could later drive instead.
 import { TILE } from './models.js';
-import { ITEMS, DISHES } from './recipes.js';
+import { ITEMS } from './recipes.js';
 import { makeIngredient, buildItemMesh } from './stations.js';
 import { audio } from './audio.js';
 
@@ -30,7 +33,9 @@ export class Helper {
       staging: this.world.stationAtTile(s.staging.col, s.staging.row),
       crate: this.world.stations.find((st) => st.type === 'crate' && st.crateItem === s.ingredient),
     }));
-    this.state = 'idle';
+    // where to park when both boards are stocked (out of the player's way)
+    this.idleTile = config.idle || { col: 0, row: 0 };
+    this.state = 'toIdle';
     this.line = null;        // the line (ingredient) currently being worked
     this.nav = null;         // { path:[{col,row}], i }
     this.chopBoard = null;   // board chopped THIS frame (game.js hides its resting knife)
@@ -61,24 +66,16 @@ export class Helper {
     return null;
   }
 
-  // "monitor the orders": how many tickets ON SCREEN need this ingredient's slice.
-  demand(ingredient) {
-    const part = ingredient === 'cheese' ? 'cheese_chopped' : 'lettuce_chopped';
-    const tickets = this.game.orders ? this.game.orders.tickets : [];
-    return tickets.filter((t) => (DISHES[t.dish] && DISHES[t.dish].parts || []).includes(part)).length;
-  }
-
-  // choose the next line: a staging spot that is EMPTY (par=1) and whose
-  // ingredient an active order needs (demand-driven). Highest demand wins ties.
-  decide() {
-    let best = null, bestD = 0;
+  // ALWAYS keep both boards stocked (par=1): the first line whose staging spot
+  // is empty becomes the next job — no demand check, so the helper refills the
+  // instant the player takes a slice. Returns true if a job was started.
+  pickWork() {
     for (const line of this.lines) {
-      if (line.staging.item) continue;          // par=1: one slice already staged
-      const d = this.demand(line.ingredient);
-      if (d <= 0) continue;                      // nobody needs it right now → don't pre-cut
-      if (d > bestD) { bestD = d; best = line; }
+      if (line.staging.item) continue;           // already one slice staged here
+      this.line = line; this.state = 'toCrate'; this.nav = null;
+      return true;
     }
-    if (best) { this.line = best; this.state = 'toCrate'; this.nav = null; }
+    return false;
   }
 
   // steer the chef along this.nav; returns { vec:{x,z}, arrived }.
@@ -101,16 +98,23 @@ export class Helper {
     return { vec: { x, z }, arrived: false };
   }
 
+  // build a BFS nav to a goal (once), then steer along it. → {vec, arrived, nopath}
+  navigate(goalFn) {
+    if (!this.nav) {
+      const path = this.bfs(goalFn);
+      if (!path) return { vec: { x: 0, z: 0 }, arrived: false, nopath: true };
+      this.nav = { path, i: 0 };
+    }
+    const r = this.steer();
+    return { vec: r.vec, arrived: r.arrived, nopath: false };
+  }
+
   // walk to a tile adjacent to `station`, then run onArrive() when standing there.
   // onArrive returns true when the step is done (advance), false to keep waiting.
   goTo(station, onArrive) {
     if (!station) { this.reset(); return { x: 0, z: 0 }; }
-    if (!this.nav) {
-      const path = this.bfs((c, r) => Math.abs(c - station.col) + Math.abs(r - station.row) === 1);
-      if (!path) { this.reset(); return { x: 0, z: 0 }; }   // unreachable → drop the task
-      this.nav = { path, i: 0 };
-    }
-    const r = this.steer();
+    const r = this.navigate((c, rr) => Math.abs(c - station.col) + Math.abs(rr - station.row) === 1);
+    if (r.nopath) { this.reset(); return { x: 0, z: 0 }; }   // unreachable → drop the task
     if (r.arrived) {
       const ct = this.chefTile();   // face the station so the pose points the right way
       this.chef.facing.set(Math.sign(station.col - ct.col), Math.sign(station.row - ct.row));
@@ -120,7 +124,14 @@ export class Helper {
     return r.vec;
   }
 
-  reset() { this.state = 'idle'; this.line = null; this.nav = null; }
+  // walk to an exact floor tile (the idle corner) and wait there.
+  goToTile(col, row) {
+    const r = this.navigate((c, rr) => c === col && rr === row);
+    if (r.nopath || r.arrived) { this.nav = null; this.state = 'idle'; return { x: 0, z: 0 }; }
+    return r.vec;
+  }
+
+  reset() { this.state = 'toIdle'; this.line = null; this.nav = null; }
 
   // advance the two-stage chop on the line's board (mirrors game.workStations).
   chopTick(dt) {
@@ -152,12 +163,16 @@ export class Helper {
     // pause with the rest of the kitchen during a sink question / between rounds
     if (!g.running || g.roundOver || g.questionOpen) { chef.update(dt, { x: 0, z: 0 }, g.fx); return; }
 
-    if (this.state === 'idle') this.decide();
+    // whenever it's free (idle or heading to the corner) look for a refill first
+    if (this.state === 'idle' || this.state === 'toIdle') this.pickWork();
     const L = this.line;
     let input = { x: 0, z: 0 };
 
     switch (this.state) {
       case 'idle':
+        break;                                       // parked in the corner, waiting
+      case 'toIdle':
+        input = this.goToTile(this.idleTile.col, this.idleTile.row);
         break;
       case 'toCrate':
         input = this.goTo(L.crate, () => {

@@ -56,6 +56,29 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 .form-past{color:var(--teal); font-weight:800;}
 .form-pp{color:var(--coral); font-weight:800;}
 
+/* ---------- main menu (illustrated kitchen background) ---------- */
+#startScreen.menu{background:#e9e2cf url('assets/ChatGPT/MainMenu.png') center/cover no-repeat;
+  justify-content:flex-start; gap:0; padding:0;}
+#startScreen.menu>:first-child{margin-top:0;}   /* override .screen auto-centering */
+#startScreen.menu>:last-child{margin-bottom:0;}
+.menuTop{margin-top:clamp(8px,4.5vh,40px); display:flex; flex-direction:column; align-items:center;
+  gap:12px; text-align:center; padding:0 16px;}
+.menu .logo{font-size:clamp(40px,7vw,72px); color:var(--teal);
+  text-shadow:0 3px 0 #123a2d, 0 6px 16px rgba(0,0,0,.45);}
+.menu .tagline{color:#5d3f29; font-weight:800; font-size:clamp(13px,2.1vw,18px); margin:-2px 0 4px;
+  text-shadow:0 1px 0 rgba(255,255,255,.45);}
+.menu .btn-primary{box-shadow:0 6px 0 #18a285, 0 12px 26px rgba(0,0,0,.45);}
+.menu .btn-ghost{background:rgba(12,20,48,.82); color:#fff; border-color:rgba(255,255,255,.25);
+  box-shadow:0 6px 16px rgba(0,0,0,.35);}
+.menu .btn-ghost:hover{border-color:var(--teal); color:var(--teal);}
+.menu #loadingNote{color:#5d3f29; font-weight:800; text-shadow:0 1px 0 rgba(255,255,255,.4);}
+.menuHint{position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+  background:rgba(12,20,48,.8); color:#e8eefc; font-weight:700; font-size:13px; line-height:1.5;
+  padding:8px 18px; border-radius:999px; max-width:94vw; text-align:center; backdrop-filter:blur(3px);
+  box-shadow:0 6px 18px rgba(0,0,0,.4);}
+.menuHint .key{font-size:11px; padding:1px 7px;}
+@media (max-width:430px){ .menuHint{font-size:11px; padding:6px 12px;} .menuHint .key{font-size:10px;} }
+
 /* ---------- character shop ---------- */
 #shopGrid{display:flex; gap:16px; flex-wrap:wrap; justify-content:center; max-width:720px;}
 .charCard{width:148px; background:var(--navy2); border-radius:18px; padding:10px 10px 12px; display:flex;
@@ -323,19 +346,15 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 
 <div id="countdown"><div id="countNum">3</div></div>
 
-<div id="startScreen" class="screen">
-  <h1 class="logo"><span class="pan">🍳</span>Verb Kitchen</h1>
-  <div class="tagline">Cook fast. Wash smart. Master your irregular verbs!</div>
-  <div class="howto">
-    <div class="row"><span class="ico">🏃</span><span><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> move around your kitchen</span></div>
-    <div class="row"><span class="ico">🥬</span><span><span class="key">E</span> pick up &amp; put down ingredients</span></div>
-    <div class="row"><span class="ico">🔪</span><span><span class="key">Space</span> chop &amp; work stations</span></div>
-    <div class="row"><span class="ico">🍽️</span><span>Serve dishes before patience runs out!</span></div>
-    <div class="row"><span class="ico">🧽</span><span>No clean plates? Wash them — with verbs: <span class="form-base">go</span> → <span class="form-past">went</span> → <span class="form-pp">gone</span></span></div>
+<div id="startScreen" class="screen menu">
+  <div class="menuTop">
+    <h1 class="logo"><span class="pan">🍳</span>Verb Kitchen</h1>
+    <div class="tagline">Cook fast · Wash smart · Master your irregular verbs</div>
+    <button id="playBtn" class="btn-primary">Play! 🍳</button>
+    <button id="charsBtn" class="btn-ghost">🧑‍🍳 Characters</button>
+    <div id="loadingNote"></div>
   </div>
-  <button id="charsBtn" class="btn-ghost">🧑‍🍳 Characters</button>
-  <button id="playBtn" class="btn-primary">Play! 🍳</button>
-  <div id="loadingNote"></div>
+  <div class="menuHint"><span class="key">WASD</span> move · <span class="key">E</span> pick up · <span class="key">Space</span> chop — then wash dirty plates with verbs: <span class="form-base">go</span> → <span class="form-past">went</span> → <span class="form-pp">gone</span></div>
 </div>
 
 <div id="levelScreen" class="screen hidden">

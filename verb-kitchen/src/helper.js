@@ -20,8 +20,10 @@ import { makeIngredient, buildItemMesh } from './stations.js';
 import { audio } from './audio.js';
 
 const CHOP_TIME = 1.4;
-// chopped-output id for each raw the bot preps (used for demand + supply counts)
+// chopped-output id for each raw the bot preps, and the reverse — used to read
+// the orders' needs and to recognise free slices lying around.
 const CHOPPED = { cheese: 'cheese_chopped', lettuce: 'lettuce_chopped', tomato: 'tomato_slices' };
+const INGREDIENT_OF = { cheese_chopped: 'cheese', lettuce_chopped: 'lettuce', tomato_slices: 'tomato' };
 
 export class Helper {
   constructor(game, chef, config) {
@@ -92,21 +94,7 @@ export class Helper {
 
   // choose the next job; sets this.line + state and returns true if one starts.
   pickWork() {
-    if (this.demandMode) {
-      // demand-driven: make whichever needed ingredient is most short — orders
-      // on screen that need it minus what's already staged. Biggest deficit
-      // wins, so a salad's tomato is never starved by constant burger refills.
-      let best = null, bestDef = 0;
-      for (const line of this.lines) {
-        const part = CHOPPED[line.ingredient];
-        const need = (this.game.orders ? this.game.orders.tickets : [])
-          .filter((t) => ((DISHES[t.dish] && DISHES[t.dish].parts) || []).includes(part)).length;
-        const def = need - this.stagedCount(line);
-        if (def > bestDef) { bestDef = def; best = line; }
-      }
-      if (best) { this.line = best; this.state = 'toCrate'; this.nav = null; return true; }
-      return false;
-    }
+    if (this.demandMode) return this.pickByPlan();
     // always-stocked: first line whose (fixed or pooled) supply is empty
     for (const line of this.lines) {
       if (this.stagedCount(line) > 0) continue;
@@ -114,6 +102,63 @@ export class Helper {
       return true;
     }
     return false;
+  }
+
+  // Smart demand planner. Walk the orders on screen in turn: an order that
+  // already has a ready-made dish waiting is skipped; otherwise each chopped
+  // ingredient it needs is satisfied first from a FREE slice already lying
+  // around (pass pool / a counter / the player's hand — anything NOT bound into
+  // another dish), and only the first genuinely-missing one is made. Re-run each
+  // time the bot is free, so "2 cheeses needed" naturally becomes 2 trips.
+  // Backup when every order is covered: top up an empty pass slot with any
+  // ingredient we currently have none of anywhere.
+  pickByPlan() {
+    const { free, dishes } = this.gatherResources();
+    const have = { ...free };                 // absolute availability, for the backup rule
+    for (const ticket of (this.game.orders ? this.game.orders.tickets : [])) {
+      const d = ticket.dish;
+      if ((dishes[d] || 0) > 0) { dishes[d]--; continue; }   // a finished one waits → covered
+      for (const part of ((DISHES[d] && DISHES[d].parts) || [])) {
+        const ing = INGREDIENT_OF[part];
+        if (!ing) continue;                                  // bun / patty etc. — not the bot's job
+        if (free[ing] > 0) { free[ing]--; continue; }        // a free slice exists → use it
+        return this.startJob(ing);                           // genuinely missing → make it next
+      }
+    }
+    // nothing required → fill an empty pass slot with an ingredient we have none of
+    if (this.passTiles.some((t) => !t.item)) {
+      for (const line of this.lines) if ((have[line.ingredient] || 0) === 0) return this.startJob(line.ingredient);
+    }
+    return false;
+  }
+
+  startJob(ingredient) {
+    const line = this.lines.find((l) => l.ingredient === ingredient);
+    if (!line) return false;
+    this.line = line; this.state = 'toCrate'; this.nav = null;
+    return true;
+  }
+
+  // Tally what's already available so the bot never makes a duplicate: ready-made
+  // dishes (a complete plate, or a finished plate-less burger) and FREE chopped
+  // slices (standalone on a station or in the player's hand — NOT the slices
+  // bound inside a plate or a half-built burger).
+  gatherResources() {
+    const free = { cheese: 0, lettuce: 0, tomato: 0 };
+    const dishes = {};
+    const add = (it) => {
+      if (!it) return;
+      if (it.type === 'plate') {
+        if (it.dish) dishes[it.dish] = (dishes[it.dish] || 0) + 1;
+      } else if (it.type === 'ing') {
+        const ing = INGREDIENT_OF[it.id];
+        if (ing) free[ing]++;
+        else { const d = ITEMS[it.id] && ITEMS[it.id].dish; if (d) dishes[d] = (dishes[d] || 0) + 1; }
+      }
+    };
+    for (const st of this.world.stations) add(st.item);
+    add(this.game.chef.carried);
+    return { free, dishes };
   }
 
   // steer the chef along this.nav; returns { vec:{x,z}, arrived }.

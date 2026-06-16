@@ -356,12 +356,6 @@
       "rot": 2
     },
     {
-      "model": "oven",
-      "col": 5,
-      "row": 9,
-      "rot": 2
-    },
-    {
       "model": "pizza_oven",
       "col": 5,
       "row": 7,

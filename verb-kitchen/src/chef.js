@@ -57,6 +57,7 @@ export class Chef {
     this.vel = new THREE.Vector3();
     this.facing = new THREE.Vector2(0, 1);   // grid-space dir (x, z)
     this.heading = 0;
+    this.speedScale = 1;           // <1 = slower (the co-op helper moves slower)
     this.working = false;          // chopping at a board this frame
     this.workTool = 'knife';       // tool of the board being worked
     this.bobT = 0;
@@ -152,7 +153,8 @@ export class Chef {
         }
       }
       this.facing.set(ix, iz);
-      this.vel.set(ix * SPEED, 0, iz * SPEED);
+      const moveSpeed = SPEED * (this.speedScale || 1);
+      this.vel.set(ix * moveSpeed, 0, iz * moveSpeed);
 
       // axis-separated collision
       this.tryMove(this.vel.x * dt, 0);

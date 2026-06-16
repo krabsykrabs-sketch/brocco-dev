@@ -135,9 +135,9 @@ export function initQA(game, save, startLevel, params) {
       }
       VK.tick(0.5);
     } else if (scene === 'coop') {
-      // co-op helper showcase: with no demand gate it stocks both boards, then
-      // parks in the bottom-left idle corner (deterministic — no RNG in the bot).
-      VK.tick(16);
+      // co-op helper showcase: with no demand gate it stocks both boards (slowly,
+      // unhurried), then parks in the bottom-left idle corner. No RNG in the bot.
+      VK.tick(28);
     } else if (scene === 'chop') {
       // frozen mid-chop: progress bar visible over the cutting board
       const board = game.world.stations.find((s) => s.type === 'board');

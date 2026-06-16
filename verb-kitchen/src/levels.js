@@ -128,6 +128,9 @@ export const LEVELS = [
       char: 'knight',                  // helper character (player defaults to rogue)
       spawn: { col: 2, row: 4 },       // helper starts near its boards
       idle: { col: 1, row: 4 },        // parks here (bottom-left) when both boards are stocked
+      moveSpeed: 0.5,                  // walks at 50% of the player's speed (unhurried)
+      workSpeed: 0.55,                 // chops slower than the player too
+      reaction: 0.7,                   // pauses ~0.7s to "think" before each action
       // left board (col 2) = lettuce, right board (col 4) = cheese; each stages
       // onto the counter immediately to its right (col 3 / col 5).
       stations: [

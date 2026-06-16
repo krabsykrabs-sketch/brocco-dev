@@ -107,6 +107,7 @@ export class Game {
     // co-op helper: a second chef driven by a bot brain (see helper.js)
     if (this.level.coop) {
       const hc = new Chef(this.world, this._helperAssets);
+      hc.speedScale = this.level.coop.moveSpeed != null ? this.level.coop.moveSpeed : 0.55;
       const sp = this.level.coop.spawn;
       hc.pos.copy(sp ? this.world.tileWorld(sp.col, sp.row) : this.world.spawn);
       this.scene.add(hc.obj);

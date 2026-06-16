@@ -35,6 +35,12 @@ export class Helper {
     }));
     // where to park when both boards are stocked (out of the player's way)
     this.idleTile = config.idle || { col: 0, row: 0 };
+    // pacing (all tunable from the level's coop config — the helper is meant to
+    // feel unhurried, not robotic): chop speed vs the player + a "think" delay
+    // before each action so it doesn't react instantly.
+    this.workMul = config.workSpeed != null ? config.workSpeed : 0.55;
+    this.reaction = config.reaction != null ? config.reaction : 0.7;
+    this.delay = 0;          // reaction countdown; stands still while > 0
     this.state = 'toIdle';
     this.line = null;        // the line (ingredient) currently being worked
     this.nav = null;         // { path:[{col,row}], i }
@@ -143,11 +149,12 @@ export class Helper {
       this.chef.setCarried(it, buildItemMesh(it));
       this.state = 'toStaging';
       this.nav = null;
+      this.delay = this.reaction * 0.5;      // beat before walking it over
       return;
     }
     this.chopBoard = st;
     const before = st.progress;
-    st.progress += dt / (def.chopTime || CHOP_TIME);
+    st.progress += (dt * this.workMul) / (def.chopTime || CHOP_TIME);
     if (Math.floor(before * 5) !== Math.floor(st.progress * 5)) audio.chop();
     if (ITEMS[def.chopTo] && ITEMS[def.chopTo].interim) {
       if (st.progress >= 0.5) st.setItem(makeIngredient(def.chopTo), true, true);
@@ -163,8 +170,15 @@ export class Helper {
     // pause with the rest of the kitchen during a sink question / between rounds
     if (!g.running || g.roundOver || g.questionOpen) { chef.update(dt, { x: 0, z: 0 }, g.fx); return; }
 
-    // whenever it's free (idle or heading to the corner) look for a refill first
-    if (this.state === 'idle' || this.state === 'toIdle') this.pickWork();
+    // reaction beat: stand still while a "think" delay is pending
+    if (this.delay > 0) { this.delay -= dt; chef.update(dt, { x: 0, z: 0 }, g.fx); return; }
+
+    // whenever it's free, look for a refill — then take a beat before darting off
+    if ((this.state === 'idle' || this.state === 'toIdle') && this.pickWork()) {
+      this.delay = this.reaction;
+      chef.update(dt, { x: 0, z: 0 }, g.fx);
+      return;
+    }
     const L = this.line;
     let input = { x: 0, z: 0 };
 
@@ -180,6 +194,7 @@ export class Helper {
           const raw = makeIngredient(L.crate.crateItem);
           this.chef.setCarried(raw, buildItemMesh(raw));
           this.state = 'toBoard';
+          this.delay = this.reaction * 0.5;   // beat after grabbing
           return true;
         });
         break;
@@ -190,6 +205,7 @@ export class Helper {
           L.board.setItem(this.chef.carried);
           this.chef.setCarried(null);
           this.state = 'chopping';
+          this.delay = this.reaction * 0.5;   // beat before the knife comes down
           return true;
         });
         break;

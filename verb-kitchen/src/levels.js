@@ -183,11 +183,19 @@ export const LEVELS = [
       spawn: { col: 2, row: 5 },
       idle: { col: 1, row: 6 },        // parks bottom-left of the prep wing
       moveSpeed: 0.5, workSpeed: 0.55, reaction: 0.7,
-      // each topping: crate (left wall) → its board (col 3) → pass counter (col 5)
+      demand: true,                    // cut only what the orders actually need
+      // the whole central pass counter is a shared drop pool — the bot parks a
+      // slice on ANY free tile (preferred one taken? just use the next).
+      pass: [
+        { col: 5, row: 1 }, { col: 5, row: 2 }, { col: 5, row: 3 },
+        { col: 5, row: 4 }, { col: 5, row: 5 }, { col: 5, row: 6 },
+      ],
+      // each topping has its own crate (left wall) + board (col 3); staging is
+      // the shared pass pool above.
       stations: [
-        { ingredient: 'cheese',  board: { col: 3, row: 1 }, staging: { col: 5, row: 1 } },
-        { ingredient: 'lettuce', board: { col: 3, row: 2 }, staging: { col: 5, row: 2 } },
-        { ingredient: 'tomato',  board: { col: 3, row: 3 }, staging: { col: 5, row: 3 } },
+        { ingredient: 'cheese',  board: { col: 3, row: 1 } },
+        { ingredient: 'lettuce', board: { col: 3, row: 2 } },
+        { ingredient: 'tomato',  board: { col: 3, row: 3 } },
       ],
     },
   },

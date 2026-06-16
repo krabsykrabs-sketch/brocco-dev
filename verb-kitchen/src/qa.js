@@ -139,9 +139,12 @@ export function initQA(game, save, startLevel, params) {
       // unhurried), then parks in the bottom-left idle corner. No RNG in the bot.
       VK.tick(28);
     } else if (scene === 'split') {
-      // split-kitchen showcase: the bot stocks all three pass-counter slots
-      // (cheese / lettuce / tomato), then parks in its prep-wing corner.
-      VK.tick(40);
+      // split-kitchen showcase: a few orders → the bot cuts (demand-driven) just
+      // what they need onto the central pass pool, then idles in its corner.
+      VK.spawnTicket('salad');
+      VK.spawnTicket('cheeseburger');
+      VK.spawnTicket('bigburger');
+      VK.tick(48);
     } else if (scene === 'chop') {
       // frozen mid-chop: progress bar visible over the cutting board
       const board = game.world.stations.find((s) => s.type === 'board');

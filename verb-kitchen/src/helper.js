@@ -1,24 +1,27 @@
 // Co-op kitchen helper (the first multiplayer experiment — a BOT teammate).
 // Drives a SECOND Chef through a tiny state machine:
 //   toIdle/idle → toCrate → toBoard → chopping → toStaging → toIdle …
-// It fetches raw cheese / lettuce from the crates, chops each on its OWN
-// dedicated board, and parks the finished slice on the counter to the RIGHT of
-// that board. Two rules, both chosen by the user:
-//   • always stocked — it keeps BOTH boards topped up regardless of the orders,
-//     refilling the instant the player takes a slice;
-//   • par = 1 — at most one cut slice staged per board at a time.
-// When both boards are stocked it walks to an idle corner and waits there,
-// out of the player's way (config.idle).
+// It fetches raw ingredients from the crates, chops each on its OWN dedicated
+// board, and stages the finished slice for the player to grab. Two behaviours
+// are picked per level via the coop config:
+//   • production — DEMAND-DRIVEN (make whatever the on-screen orders are short
+//     of) when `config.demand`, else always keep every supply topped up;
+//   • staging — a shared POOL of pass-counter tiles (drop a slice on any free
+//     one) when `config.pass` is set, else one fixed spot per ingredient.
+// When nothing needs making it walks to an idle corner and waits there
+// (config.idle), out of the player's way.
 // It NEVER cooks, plates, serves or washes — the human owns assembly and the
 // sink (so the grammar stays 100% with the player). This is deliberately a
 // dumb, predictable, station-bound bot: the "second seat" abstraction that a
 // remote human could later drive instead.
 import { TILE } from './models.js';
-import { ITEMS } from './recipes.js';
+import { ITEMS, DISHES } from './recipes.js';
 import { makeIngredient, buildItemMesh } from './stations.js';
 import { audio } from './audio.js';
 
 const CHOP_TIME = 1.4;
+// chopped-output id for each raw the bot preps (used for demand + supply counts)
+const CHOPPED = { cheese: 'cheese_chopped', lettuce: 'lettuce_chopped', tomato: 'tomato_slices' };
 
 export class Helper {
   constructor(game, chef, config) {
@@ -30,10 +33,17 @@ export class Helper {
     this.lines = config.stations.map((s) => ({
       ingredient: s.ingredient,
       board: this.world.stationAtTile(s.board.col, s.board.row),
-      staging: this.world.stationAtTile(s.staging.col, s.staging.row),
+      staging: s.staging ? this.world.stationAtTile(s.staging.col, s.staging.row) : null,
       crate: this.world.stations.find((st) => st.type === 'crate' && st.crateItem === s.ingredient),
     }));
-    // where to park when both boards are stocked (out of the player's way)
+    // production mode: demand-driven (only cut what the orders need) vs simply
+    // keeping every supply topped up. Staging: a shared POOL of pass-counter
+    // tiles (drop a slice on any free one) vs one fixed spot per ingredient.
+    this.demandMode = !!config.demand;
+    this.passTiles = (config.pass || [])
+      .map((p) => this.world.stationAtTile(p.col, p.row)).filter(Boolean);
+    this.stageTarget = null;   // the staging tile chosen for the slice in hand
+    // where to park when stocked (out of the player's way)
     this.idleTile = config.idle || { col: 0, row: 0 };
     // pacing (all tunable from the level's coop config — the helper is meant to
     // feel unhurried, not robotic): chop speed vs the player + a "think" delay
@@ -72,12 +82,34 @@ export class Helper {
     return null;
   }
 
-  // ALWAYS keep both boards stocked (par=1): the first line whose staging spot
-  // is empty becomes the next job — no demand check, so the helper refills the
-  // instant the player takes a slice. Returns true if a job was started.
+  // how many slices of `line`'s ingredient are sitting ready for the player —
+  // counted across the pass pool (pool levels) or its single fixed spot.
+  stagedCount(line) {
+    const part = CHOPPED[line.ingredient];
+    if (this.passTiles.length) return this.passTiles.filter((t) => t.item && t.item.id === part).length;
+    return line.staging && line.staging.item && line.staging.item.id === part ? 1 : 0;
+  }
+
+  // choose the next job; sets this.line + state and returns true if one starts.
   pickWork() {
+    if (this.demandMode) {
+      // demand-driven: make whichever needed ingredient is most short — orders
+      // on screen that need it minus what's already staged. Biggest deficit
+      // wins, so a salad's tomato is never starved by constant burger refills.
+      let best = null, bestDef = 0;
+      for (const line of this.lines) {
+        const part = CHOPPED[line.ingredient];
+        const need = (this.game.orders ? this.game.orders.tickets : [])
+          .filter((t) => ((DISHES[t.dish] && DISHES[t.dish].parts) || []).includes(part)).length;
+        const def = need - this.stagedCount(line);
+        if (def > bestDef) { bestDef = def; best = line; }
+      }
+      if (best) { this.line = best; this.state = 'toCrate'; this.nav = null; return true; }
+      return false;
+    }
+    // always-stocked: first line whose (fixed or pooled) supply is empty
     for (const line of this.lines) {
-      if (line.staging.item) continue;           // already one slice staged here
+      if (this.stagedCount(line) > 0) continue;
       this.line = line; this.state = 'toCrate'; this.nav = null;
       return true;
     }
@@ -137,7 +169,24 @@ export class Helper {
     return r.vec;
   }
 
-  reset() { this.state = 'toIdle'; this.line = null; this.nav = null; }
+  // where to drop the slice in hand: the nearest FREE pass-counter tile (pool
+  // levels — so a taken preferred spot just means "use the next one"), or the
+  // line's single fixed spot. null = pool full → wait, holding it.
+  chooseStaging() {
+    if (this.passTiles.length) {
+      const ct = this.chefTile();
+      let best = null, bd = Infinity;
+      for (const t of this.passTiles) {
+        if (t.item) continue;
+        const d = Math.abs(t.col - ct.col) + Math.abs(t.row - ct.row);
+        if (d < bd) { bd = d; best = t; }
+      }
+      return best;
+    }
+    return this.line.staging;
+  }
+
+  reset() { this.state = 'toIdle'; this.line = null; this.nav = null; this.stageTarget = null; }
 
   // advance the two-stage chop on the line's board (mirrors game.workStations).
   chopTick(dt) {
@@ -213,10 +262,14 @@ export class Helper {
         this.chopTick(dt);
         break;
       case 'toStaging':
-        input = this.goTo(L.staging, () => {
-          if (L.staging.item) return false;                   // spot still full → wait (holding)
-          L.staging.setItem(this.chef.carried);
+        // (re)pick a drop spot if we don't have a free one yet
+        if (!this.stageTarget || this.stageTarget.item) { this.stageTarget = this.chooseStaging(); this.nav = null; }
+        if (!this.stageTarget) break;                         // pool full → wait, holding the slice
+        input = this.goTo(this.stageTarget, () => {
+          if (this.stageTarget.item) { this.stageTarget = null; this.nav = null; return false; }  // taken → re-pick
+          this.stageTarget.setItem(this.chef.carried);
           this.chef.setCarried(null);
+          this.stageTarget = null;
           this.reset();
           return true;
         });

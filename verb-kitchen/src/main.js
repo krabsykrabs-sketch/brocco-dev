@@ -14,14 +14,17 @@ import { initTouch } from './touch.js';
 // buttons looking pressed but doing nothing.
 function tap(el, fn) {
   if (!el) return;
-  let viaPointer = false;
   el.addEventListener('pointerup', (e) => {
     if (e.pointerType === 'mouse') return;           // mouse → let the click handler run
-    viaPointer = true; setTimeout(() => { viaPointer = false; }, 600);
+    window.__touchTapAt = performance.now();
     fn(e);
   });
   el.addEventListener('click', (e) => {
-    if (viaPointer) { viaPointer = false; return; }  // already handled on pointerup
+    // Ignore the ghost click that trails a touch tap: it can land on an element
+    // that only just appeared under the finger — e.g. a level card revealed when
+    // "Play" opened the grid — which was auto-starting a level on mobile. The
+    // guard is SHARED (window) so a tap on one element can't ghost-click another.
+    if (performance.now() - (window.__touchTapAt || -9999) < 700) return;
     fn(e);
   });
 }

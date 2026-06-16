@@ -9,14 +9,15 @@ const $ = (id) => document.getElementById(id);
 // Robust tap: pointerup (touch/pen) + click, deduped — some tablet browsers
 // don't fire `click` after a touch, which would make level/character cards inert.
 function tap(el, fn) {
-  let viaPointer = false;
   el.addEventListener('pointerup', (e) => {
     if (e.pointerType === 'mouse') return;
-    viaPointer = true; setTimeout(() => { viaPointer = false; }, 600);
+    window.__touchTapAt = performance.now();
     fn(e);
   });
   el.addEventListener('click', (e) => {
-    if (viaPointer) { viaPointer = false; return; }
+    // ignore the ghost click trailing a touch (shared guard with main.js) so a
+    // tap on "Play" can't ghost-click the level card that appears beneath it
+    if (performance.now() - (window.__touchTapAt || -9999) < 700) return;
     fn(e);
   });
 }

@@ -142,14 +142,15 @@ export const LEVELS = [
   },
   {
     // Level 5 "Split Kitchen" — the FLAGSHIP co-op level. A solid counter wall
-    // (col 5) splits the kitchen into a PREP wing (the bot's room: cheese /
-    // lettuce / tomato crates + 3 boards, cols 0–4) and a SERVICE wing (yours:
-    // buns, patties, two stoves, rack, sink, hatch, trash, cols 6–10). The two
-    // are joined ONLY by the central pass counter (col 5), where the bot drops
+    // (col 4) splits the kitchen into a PREP wing (the bot's room: cheese /
+    // lettuce / tomato crates + ONE board, cols 0–3) and a SERVICE wing (yours:
+    // buns, patties, two stoves, rack, sink, hatch, trash, cols 5–8). The two
+    // are joined ONLY by the central pass counter (col 4), where the bot drops
     // prepped toppings and you grab them from the service side. Neither can
-    // cross — co-op is structural (the prep wing is unreachable solo). You cook,
-    // build burgers, plate salads, serve and WASH; the bot keeps all three
-    // toppings stocked. Code-side ASCII + coop config (editor schema untouched).
+    // cross — co-op is structural (the prep wing is unreachable solo). Each chef
+    // owns its room, so the kitchen is compact (9×7). You cook, build burgers,
+    // plate salads, serve and WASH; the bot preps all three toppings.
+    // Code-side ASCII + coop config (editor schema untouched).
     id: 'split_coop',
     num: 5,
     open: true,                  // co-op test level — always selectable
@@ -157,14 +158,13 @@ export const LEVELS = [
     emoji: '👥',
     style: 'A',
     map: [
-      'CCCCCCHHCCC',
-      '4..b.C...sC',
-      '3..b.C.P.sC',
-      '5..b.C....C',
-      'C....C.CC.1',
-      'C....C....2',
-      'C....C...CC',
-      'CCCCCCkrtCC',
+      'CCCCCHHCC',
+      '4...C..sC',
+      '3.b.C.PsC',
+      '5...C...1',
+      'C...C.C.2',
+      'C...C...C',
+      'CCCCCkrtC',
     ],
     crates: { 1: 'bun', 2: 'patty_raw', 3: 'lettuce', 4: 'cheese', 5: 'tomato' },
     // burgers (cheese) + big burgers (cheese+lettuce) + salads (lettuce+tomato)
@@ -180,22 +180,22 @@ export const LEVELS = [
     },
     coop: {
       char: 'knight',
-      spawn: { col: 2, row: 5 },
-      idle: { col: 1, row: 6 },        // parks bottom-left of the prep wing
+      spawn: { col: 1, row: 4 },
+      idle: { col: 1, row: 5 },        // parks bottom-left of the prep wing
       moveSpeed: 0.5, workSpeed: 0.55, reaction: 0.7,
       demand: true,                    // cut only what the orders actually need
-      // the whole central pass counter is a shared drop pool — the bot parks a
+      // the central pass counter (col 4) is a shared drop pool — the bot parks a
       // slice on ANY free tile (preferred one taken? just use the next).
       pass: [
-        { col: 5, row: 1 }, { col: 5, row: 2 }, { col: 5, row: 3 },
-        { col: 5, row: 4 }, { col: 5, row: 5 }, { col: 5, row: 6 },
+        { col: 4, row: 1 }, { col: 4, row: 2 }, { col: 4, row: 3 },
+        { col: 4, row: 4 }, { col: 4, row: 5 },
       ],
-      // each topping has its own crate (left wall) + board (col 3); staging is
-      // the shared pass pool above.
+      // ONE shared cutting board (col 2) — the bot only chops one thing at a
+      // time; staging is the shared pass pool above.
       stations: [
-        { ingredient: 'cheese',  board: { col: 3, row: 1 } },
-        { ingredient: 'lettuce', board: { col: 3, row: 2 } },
-        { ingredient: 'tomato',  board: { col: 3, row: 3 } },
+        { ingredient: 'cheese',  board: { col: 2, row: 2 } },
+        { ingredient: 'lettuce', board: { col: 2, row: 2 } },
+        { ingredient: 'tomato',  board: { col: 2, row: 2 } },
       ],
     },
   },

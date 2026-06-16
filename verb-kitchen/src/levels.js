@@ -103,6 +103,7 @@ export const LEVELS = [
     // The `coop` block lives entirely in code (not the editor JSON schema).
     id: 'burger_coop',
     num: 4,
+    open: true,                  // co-op test level — always selectable
     name: 'Burger Bar Co-op',
     emoji: '🤝',
     style: 'A',
@@ -139,12 +140,62 @@ export const LEVELS = [
       ],
     },
   },
+  {
+    // Level 5 "Split Kitchen" — the FLAGSHIP co-op level. A solid counter wall
+    // (col 5) splits the kitchen into a PREP wing (the bot's room: cheese /
+    // lettuce / tomato crates + 3 boards, cols 0–4) and a SERVICE wing (yours:
+    // buns, patties, two stoves, rack, sink, hatch, trash, cols 6–10). The two
+    // are joined ONLY by the central pass counter (col 5), where the bot drops
+    // prepped toppings and you grab them from the service side. Neither can
+    // cross — co-op is structural (the prep wing is unreachable solo). You cook,
+    // build burgers, plate salads, serve and WASH; the bot keeps all three
+    // toppings stocked. Code-side ASCII + coop config (editor schema untouched).
+    id: 'split_coop',
+    num: 5,
+    open: true,                  // co-op test level — always selectable
+    name: 'Split Kitchen',
+    emoji: '👥',
+    style: 'A',
+    map: [
+      'CCCCCCHHCCC',
+      '4..b.C...sC',
+      '3..b.C.P.sC',
+      '5..b.C....C',
+      'C....C.CC.1',
+      'C....C....2',
+      'C....C...CC',
+      'CCCCCCkrtCC',
+    ],
+    crates: { 1: 'bun', 2: 'patty_raw', 3: 'lettuce', 4: 'cheese', 5: 'tomato' },
+    // burgers (cheese) + big burgers (cheese+lettuce) + salads (lettuce+tomato)
+    // → all three of the bot's prep streams stay busy.
+    orders: ['cheeseburger', 'salad', 'bigburger', 'hamburger', 'salad', 'cheeseburger', 'bigburger', 'salad'],
+    spawnEvery: [5, 8],
+    plates: 3,
+    starTimes: [340, 270, 215, 170],   // bigger level — placeholders, tune from play
+    tutorial: {
+      image: 'assets/ChatGPT/Burger.png',
+      title: 'Split Kitchen (co-op)',
+      text: 'You share a divided kitchen with a helper! It preps cheese, lettuce and tomato and passes them across the middle counter — you cook the patties, build burgers and salads, serve, and wash up.',
+    },
+    coop: {
+      char: 'knight',
+      spawn: { col: 2, row: 5 },
+      idle: { col: 1, row: 6 },        // parks bottom-left of the prep wing
+      moveSpeed: 0.5, workSpeed: 0.55, reaction: 0.7,
+      // each topping: crate (left wall) → its board (col 3) → pass counter (col 5)
+      stations: [
+        { ingredient: 'cheese',  board: { col: 3, row: 1 }, staging: { col: 5, row: 1 } },
+        { ingredient: 'lettuce', board: { col: 3, row: 2 }, staging: { col: 5, row: 2 } },
+        { ingredient: 'tomato',  board: { col: 3, row: 3 }, staging: { col: 5, row: 3 } },
+      ],
+    },
+  },
 ];
 
 // Locked "coming soon" slots shown after the 3 playable levels (levels grow to
 // ~10–15; dish themes repeat). Numbers only; emoji is a decorative hint.
 export const PLACEHOLDERS = [
-  { id: 'lv5',  num: 5,  emoji: '🍲' },
   { id: 'lv6',  num: 6,  emoji: '🥗' },
   { id: 'lv7',  num: 7,  emoji: '🍔' },
   { id: 'lv8',  num: 8,  emoji: '🍕' },

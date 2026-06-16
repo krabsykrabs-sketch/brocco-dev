@@ -66,9 +66,9 @@ export const ui = {
     LEVELS.forEach((lv, i) => {
       const stars = save.stars[lv.id] || 0;
       const best = save.bestTime[lv.id];
-      // first 4 levels are always open (Level 4 = the co-op test, kept open so
-      // it's easy to evaluate); later ones need ≥1 star in the previous
-      const locked = i >= 4 && (save.stars[LEVELS[i - 1].id] || 0) < 1;
+      // levels flagged `open` (the co-op test levels) are always selectable;
+      // otherwise the first 3 are open and later ones need ≥1 star in the previous
+      const locked = !lv.open && i >= 3 && (save.stars[LEVELS[i - 1].id] || 0) < 1;
       const [, s2, s3, sA] = lv.starTimes;   // 1★ is just "finish" now (no time)
       // 3 normal stars (filled/empty) + the author star ONLY when earned (never empty)
       const starStr = [1, 2, 3].map((n) => `<span class="${n <= stars ? '' : 'off'}">⭐</span>`).join('')

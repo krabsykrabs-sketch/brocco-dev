@@ -31,6 +31,9 @@ export const ui = {
     const screens = ['startScreen', 'levelScreen', 'shopScreen', 'post'];
     for (const s of screens) $(s).classList.toggle('hidden', s !== id);
     if (!id) for (const s of screens) $(s).classList.add('hidden');
+    // the shared illustrated-kitchen background is on for any menu screen, off
+    // during gameplay — one persistent element, so it never reloads on switch.
+    $('menuBg').classList.toggle('on', !!id);
   },
 
   /** Character shop: portrait cards, threshold-unlocked by total stars. */

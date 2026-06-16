@@ -56,22 +56,25 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 .form-past{color:var(--teal); font-weight:800;}
 .form-pp{color:var(--coral); font-weight:800;}
 
-/* ---------- main menu (illustrated kitchen background) ---------- */
-#startScreen.menu{background:#e9e2cf url('assets/ChatGPT/MainMenu.png') center/cover no-repeat;
-  justify-content:flex-start; gap:0; padding:0;}
-#startScreen.menu>:first-child{margin-top:0;}   /* override .screen auto-centering */
-#startScreen.menu>:last-child{margin-bottom:0;}
-.menuTop{margin-top:clamp(8px,4.5vh,40px); display:flex; flex-direction:column; align-items:center;
-  gap:12px; text-align:center; padding:0 16px;}
-.menu .logo{font-size:clamp(40px,7vw,72px); color:var(--teal);
-  text-shadow:0 3px 0 #123a2d, 0 6px 16px rgba(0,0,0,.45);}
-.menu .tagline{color:#5d3f29; font-weight:800; font-size:clamp(13px,2.1vw,18px); margin:-2px 0 4px;
-  text-shadow:0 1px 0 rgba(255,255,255,.45);}
-.menu .btn-primary{box-shadow:0 6px 0 #18a285, 0 12px 26px rgba(0,0,0,.45);}
-.menu .btn-ghost{background:rgba(12,20,48,.82); color:#fff; border-color:rgba(255,255,255,.25);
-  box-shadow:0 6px 16px rgba(0,0,0,.35);}
-.menu .btn-ghost:hover{border-color:var(--teal); color:var(--teal);}
-.menu #loadingNote{color:#5d3f29; font-weight:800; text-shadow:0 1px 0 rgba(255,255,255,.4);}
+/* ---------- menus share ONE fixed illustrated-kitchen background ---------- */
+/* a single persistent element behind every menu screen: it never reloads when
+   you switch screens, and stays FIXED while a screen's content scrolls. */
+#menuBg{position:fixed; inset:0; z-index:39; display:none;
+  background:#e9e2cf url('assets/ChatGPT/MainMenu.png') center/cover no-repeat;}
+#menuBg.on{display:block;}
+/* menu screens are transparent so #menuBg shows through; their content is
+   centred (the .screen auto-margins) and only the CONTENT scrolls on overflow. */
+.screen{background:transparent;}
+.menuTop{margin:auto 0; display:flex; flex-direction:column; align-items:center; gap:13px; text-align:center; padding:0 16px;}
+/* readability over the busy image */
+.screen .logo{text-shadow:0 3px 0 #123a2d, 0 6px 18px rgba(0,0,0,.55);}
+#startScreen .logo{font-size:clamp(40px,7vw,72px);}
+.screen .tagline{color:#fff; font-weight:800; text-shadow:0 2px 6px rgba(0,0,0,.65);}
+.screen .btn-primary{box-shadow:0 6px 0 #18a285, 0 12px 26px rgba(0,0,0,.5);}
+.screen .btn-ghost{background:rgba(12,20,48,.85); color:#fff; border-color:rgba(255,255,255,.25);
+  box-shadow:0 5px 16px rgba(0,0,0,.4);}
+.screen .btn-ghost:hover{border-color:var(--teal); color:var(--teal);}
+#loadingNote{color:#fff; font-weight:800; text-shadow:0 2px 6px rgba(0,0,0,.65);}
 .menuHint{position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
   background:rgba(12,20,48,.8); color:#e8eefc; font-weight:700; font-size:13px; line-height:1.5;
   padding:8px 18px; border-radius:999px; max-width:94vw; text-align:center; backdrop-filter:blur(3px);
@@ -346,7 +349,10 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 
 <div id="countdown"><div id="countNum">3</div></div>
 
-<div id="startScreen" class="screen menu">
+<!-- ONE fixed illustrated-kitchen background shared by every menu screen -->
+<div id="menuBg"></div>
+
+<div id="startScreen" class="screen">
   <div class="menuTop">
     <h1 class="logo"><span class="pan">🍳</span>Verb Kitchen</h1>
     <div class="tagline">Cook fast · Wash smart · Master your irregular verbs</div>

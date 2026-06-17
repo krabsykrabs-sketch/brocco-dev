@@ -394,6 +394,21 @@ export class Game {
       return;
     }
     if (held && st.item) {
+      // sauce-bottle DRIZZLE (reusable): a `drizzle` bottle — held OR sitting on
+      // the counter — adds its sauce to a plated dish-in-progress; the bottle is
+      // NOT consumed (works either orientation, like the pizza ketchup).
+      const bottle = (held.type === 'ing' && ITEMS[held.id].drizzle) ? held
+        : (st.item.type === 'ing' && ITEMS[st.item.id].drizzle) ? st.item : null;
+      const plate = held.type === 'plate' ? held : (st.item.type === 'plate' ? st.item : null);
+      if (bottle && plate && !plate.dirty && plate.contents.length &&
+          canPlate(plate.contents, ITEMS[bottle.id].drizzle)) {
+        this.plateAdd(plate, ITEMS[bottle.id].drizzle);
+        if (plate === st.item) st.setItem(plate);
+        else this.chef.setCarried(plate, buildItemMesh(plate));
+        this.fx.sparkle(st.pos.clone().setY(st.topY + 0.5));
+        audio[plate.dish ? 'ding' : 'putdown']();
+        return;
+      }
       // plate on counter + plateable in hand
       if (st.item.type === 'plate' && !st.item.dirty && held.type === 'ing' &&
           ITEMS[held.id].plateable && canPlate(st.item.contents, held.id)) {

@@ -262,6 +262,9 @@ export const LEVELS = [
     ],
     // 1/2/3 = the three flavour tubs; 4 = the cherry crate (generic crate art).
     crates: { 1: 'scoop_vanilla', 2: 'scoop_chocolate', 3: 'scoop_strawberry', 4: 'cherry' },
+    // one reusable chocolate-syrup bottle on a counter — drizzle it on for the
+    // Cherry Deluxe (the deluxe's extra assembly step).
+    startItems: [{ c: 6, r: 2, item: 'choc_syrup' }],
     // a mix of the three sundaes; lets the player batch scoops. 6 orders · 2
     // plates → 4 washes (washing stays load-bearing — below the order count).
     orders: ['sundae_vanilla', 'sundae_neapolitan', 'sundae_deluxe', 'sundae_vanilla', 'sundae_deluxe', 'sundae_neapolitan'],
@@ -271,7 +274,7 @@ export const LEVELS = [
     tutorial: {
       image: 'assets/ChatGPT/Salad.png',
       title: 'Sundae Sunday',
-      text: 'No cooking today! Grab a bowl, scoop the ice cream straight from the tubs, add a cherry, and serve — then wash up!',
+      text: 'No cooking today! Grab a bowl, scoop ice cream from the tubs, add a cherry (and drizzle chocolate syrup for a Deluxe), serve — then wash up!',
     },
   },
 ];

@@ -145,15 +145,13 @@ export function initQA(game, save, startLevel, params) {
       put(2, 2, makeIngredient('onion_chopped'));              // a chopped onion on a board
       VK.tick(0.5);
     } else if (scene === 'icecream' || scene === 'level7') {
-      // sundae-level showcase: two sundae tickets + the cold-assembly pipeline
-      // staged on counters — a finished sundae plated (renders as a bowl of ice
-      // cream on the plate), a part-built one (a scoop in the bowl, no cherry
-      // yet), and a loose cherry topping ready to add.
-      VK.spawnTicket('sundae_neapolitan');
+      // sundae showcase: a finished Cherry Deluxe (with the chocolate-syrup
+      // drizzle) + a part-built one. The reusable syrup bottle sits on its
+      // counter via startItems (6,2) — left in place here.
       VK.spawnTicket('sundae_deluxe');
-      put(7, 1, makePlate(['scoop_vanilla', 'cherry']));                 // finished Vanilla Sundae, plated (bowl look)
-      put(6, 1, makePlate(['scoop_chocolate', 'scoop_strawberry']));     // part-built deluxe — two scoops, cherry still to come
-      put(6, 2, makeIngredient('cherry'));                               // a loose cherry topping
+      VK.spawnTicket('sundae_neapolitan');
+      put(6, 1, makePlate(['scoop_chocolate', 'scoop_strawberry', 'cherry', 'syrup']));  // finished, drizzled deluxe
+      put(7, 3, makePlate(['scoop_vanilla']));                                            // part-built sundae
       VK.tick(0.5);
     } else if (scene === 'coop') {
       // co-op helper showcase: with no demand gate it stocks both boards (slowly,

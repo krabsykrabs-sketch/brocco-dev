@@ -80,6 +80,12 @@ export const ITEMS = {
   scoop_chocolate:  { model: 'icecream_scoop', tint: '#6b4321', emoji: '🍫', scale: 1.15, plateable: true },
   scoop_strawberry: { model: 'icecream_scoop', tint: '#ff9ec2', emoji: '🍓', scale: 1.15, plateable: true },
   cherry:           { model: 'icecream_cherry', emoji: '🍒', scale: 1.4, plateable: true },
+  // reusable chocolate-syrup bottle (like the pizza ketchup): drizzle it onto a
+  // sundae-in-progress to add `syrup` — the Deluxe's extra step. `drizzle` names
+  // the content it deposits; the bottle is the ketchup model tinted dark, the
+  // drizzle that lands in the bowl is a tinted sauce blob.
+  choc_syrup:       { model: 'ketchup', tint: '#3a2113', emoji: '🍫', scale: 1.9, reusable: true, drizzle: 'syrup' },
+  syrup:            { model: 'food_ingredient_tomato_sauce', tint: '#3a2113', emoji: '🍯', scale: 1.0 },
 };
 
 // ---------- pot-in-progress states (order-free veg assembly) ----------
@@ -256,7 +262,7 @@ export const DISHES = {
   // cherry, a three-scoop mix (no topping), and a two-scoop deluxe + cherry.
   sundae_vanilla:    { name: 'Vanilla Sundae',    emoji: '🍨', parts: ['scoop_vanilla', 'cherry'],                              coins: 25, model: 'icecream_bowl_icecream_vanilla', icons: '🍨🍒' },
   sundae_neapolitan: { name: 'Neapolitan Sundae', emoji: '🍨', parts: ['scoop_vanilla', 'scoop_chocolate', 'scoop_strawberry'], coins: 40, model: 'icecream_bowl_decorated_A',      icons: '🍨🍫🍓' },
-  sundae_deluxe:     { name: 'Cherry Deluxe',     emoji: '🍨', parts: ['scoop_chocolate', 'scoop_strawberry', 'cherry'],        coins: 40, model: 'icecream_bowl_cherries',        icons: '🍫🍓🍒' },
+  sundae_deluxe:     { name: 'Cherry Deluxe',     emoji: '🍨', parts: ['scoop_chocolate', 'scoop_strawberry', 'cherry', 'syrup'], coins: 45, model: 'icecream_bowl_cherries',        icons: '🍫🍓🍒🍯' },
 };
 
 export function isBurgerDish(dishId) {

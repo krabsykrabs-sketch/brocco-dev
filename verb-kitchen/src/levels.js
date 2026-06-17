@@ -235,14 +235,52 @@ export const LEVELS = [
       text: 'Grab a pot, chop the onion, carrot and potato into it, boil it on the stove, then plate the soup and serve!',
     },
   },
+  {
+    // Level 7 "Sundae Sunday" — the FIRST cold-assembly level. Single player.
+    // NO stove, NO cutting board, NO cooking — this proves the assemble→serve→
+    // wash loop works with none of those stations present. Scoops are grabbed
+    // straight from their tubs (crates) as plateable ingredients, spooned onto a
+    // bowl (the standard washable PLATE) in any order — exactly the SALAD pattern,
+    // but cold. A cherry is an extra plateable topping. The plated sundae renders
+    // a finished ice-cream-bowl model (so it reads as a bowl of ice cream), but
+    // the plate underneath stays the washable vessel → the sink quiz is unchanged.
+    // Three distinct sundaes (single-scoop+cherry / three-scoop mix / two-scoop
+    // deluxe+cherry) give variety + a topping assembly step. style 'B' kitchen.
+    id: 'sundae',
+    num: 7,
+    open: true,                  // selectable for playtest
+    name: 'Sundae Sunday',
+    emoji: '🍨',
+    style: 'B',
+    map: [
+      'CHHCCkrC',
+      '1.....CC',
+      '2.....CC',
+      '3..P...C',
+      '4.....tC',
+      'CCCCCCCC',
+    ],
+    // 1/2/3 = the three flavour tubs; 4 = the cherry crate (generic crate art).
+    crates: { 1: 'scoop_vanilla', 2: 'scoop_chocolate', 3: 'scoop_strawberry', 4: 'cherry' },
+    // a mix of the three sundaes; lets the player batch scoops. 6 orders · 2
+    // plates → 4 washes (washing stays load-bearing — below the order count).
+    orders: ['sundae_vanilla', 'sundae_neapolitan', 'sundae_deluxe', 'sundae_vanilla', 'sundae_deluxe', 'sundae_neapolitan'],
+    spawnEvery: [5, 8],
+    plates: 2,
+    starTimes: [260, 200, 155, 120],   // 1★ / 2★ / 3★(gold) / author — placeholders
+    tutorial: {
+      image: 'assets/ChatGPT/Salad.png',
+      title: 'Sundae Sunday',
+      text: 'No cooking today! Grab a bowl, scoop the ice cream straight from the tubs, add a cherry, and serve — then wash up!',
+    },
+  },
 ];
 
-// Locked "coming soon" slots shown after the 3 playable levels (levels grow to
+// Locked "coming soon" slots shown after the playable levels (levels grow to
 // ~10–15; dish themes repeat). Numbers only; emoji is a decorative hint.
 export const PLACEHOLDERS = [
-  { id: 'lv7',  num: 7,  emoji: '🍔' },
   { id: 'lv8',  num: 8,  emoji: '🍕' },
-  { id: 'lv9',  num: 9,  emoji: '🍨' },
+  { id: 'lv9',  num: 9,  emoji: '🥪' },
   { id: 'lv10', num: 10, emoji: '🍲' },
 ];
 
@@ -265,6 +303,10 @@ export function levelModelNames(level) {
     'crate_lettuce', 'crate_tomatoes', 'crate_buns', 'crate_potatoes',
     'crate_cheese', 'crate_dough', 'crate_mushrooms',
     'crate_onions', 'crate_carrots', 'pot_A', 'food_stew',
+    // ice-cream tubs (crate art) — the scoop/cherry/bowl item+dish models come
+    // through itemModelNames(); the tub container models are only named here.
+    'icecream_container_icecream_vanilla', 'icecream_container_icecream_chocolate',
+    'icecream_container_icecream_strawberry',
   ];
 }
 
@@ -281,4 +323,9 @@ export const CRATE_MODELS = {
   carrot: 'crate_carrots',
   potato: 'crate_potatoes',
   pot_empty: 'crate',   // generic crate of clean pots (no pot-crate art in the pack)
+  // sundae tubs: filled ice-cream containers read clearly as flavour tubs.
+  scoop_vanilla: 'icecream_container_icecream_vanilla',
+  scoop_chocolate: 'icecream_container_icecream_chocolate',
+  scoop_strawberry: 'icecream_container_icecream_strawberry',
+  cherry: 'crate',      // cherries from a generic crate (no cherry-crate art)
 };

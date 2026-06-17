@@ -94,7 +94,7 @@ export function initQA(game, save, startLevel, params) {
 
   (async () => {
     const scene = qa;
-    const lvIdx = { level1: 0, level2: 1, level3: 2, level4: 3, coop: 3, level5: 4, split: 4, level6: 5, soup: 5, question: 0, burn: 1, stars: 0, recipe: 0, recipeload: 0, washing: 0, shop: 0 }[scene] ?? 0;
+    const lvIdx = { level1: 0, level2: 1, level3: 2, level4: 3, coop: 3, level5: 4, split: 4, level6: 5, soup: 5, level7: 6, icecream: 6, question: 0, burn: 1, stars: 0, recipe: 0, recipeload: 0, washing: 0, shop: 0 }[scene] ?? 0;
     if (scene === 'loading') {       // loader overlay showcase (stays up)
       ui.loading(true);
       window.__VK_READY = true;
@@ -143,6 +143,17 @@ export function initQA(game, save, startLevel, params) {
       put(7, 4, makePlate(['soup']));                          // finished garden soup, plated
       put(6, 4, makeIngredient('potwip_onion_carrot_potato')); // full pot, ready for the stove
       put(2, 2, makeIngredient('onion_chopped'));              // a chopped onion on a board
+      VK.tick(0.5);
+    } else if (scene === 'icecream' || scene === 'level7') {
+      // sundae-level showcase: two sundae tickets + the cold-assembly pipeline
+      // staged on counters — a finished sundae plated (renders as a bowl of ice
+      // cream on the plate), a part-built one (a scoop in the bowl, no cherry
+      // yet), and a loose cherry topping ready to add.
+      VK.spawnTicket('sundae_neapolitan');
+      VK.spawnTicket('sundae_deluxe');
+      put(7, 1, makePlate(['scoop_vanilla', 'cherry']));                 // finished Vanilla Sundae, plated (bowl look)
+      put(6, 1, makePlate(['scoop_chocolate', 'scoop_strawberry']));     // part-built deluxe — two scoops, cherry still to come
+      put(6, 2, makeIngredient('cherry'));                               // a loose cherry topping
       VK.tick(0.5);
     } else if (scene === 'coop') {
       // co-op helper showcase: with no demand gate it stocks both boards (slowly,

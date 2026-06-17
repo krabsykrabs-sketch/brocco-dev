@@ -1,7 +1,7 @@
 // Stations hold state + item visuals; the interaction *rules* live in game.js.
 import * as THREE from 'three';
 import { TILE, getModel, measureModel } from './models.js';
-import { ITEMS, DISHES, matchDish, isBurgerDish, PIZZA_TOPPING_MODELS, BURGER_LAYER_ORDER, BURGER_LAYER_MODELS } from './recipes.js';
+import { ITEMS, DISHES, matchDish, isBurgerDish, PIZZA_TOPPING_MODELS, BURGER_LAYER_ORDER, BURGER_LAYER_MODELS, POT_LAYERS, POT_VEG_MODELS } from './recipes.js';
 import { audio } from './audio.js';
 
 // ---------- items ----------
@@ -90,11 +90,35 @@ function composeBurger(contents, closed, baseY = 0) {
   return g;
 }
 
+/** Pot-in-progress: the pot model + a few chopped-veg bits resting inside it,
+ *  always in the same canonical order — so the look depends only on WHICH veg
+ *  are present, never the order added (mirrors composePizza). */
+function composePot(veg) {
+  const g = new THREE.Group();
+  const pot = getModel('pot_A');
+  pot.scale.multiplyScalar(0.9);
+  g.add(pot);
+  const m = measureModel('pot_A');
+  // drop the chopped bits just inside the rim, spread around the centre
+  const spots = { onion: [-0.18, 0.1], carrot: [0.2, 0.06], potato: [0, -0.2] };
+  for (const t of POT_LAYERS) {
+    if (!veg.includes(t)) continue;
+    const bit = getModel(POT_VEG_MODELS[t]);
+    bit.scale.setScalar(0.6);
+    const [sx, sz] = spots[t];
+    bit.position.set(sx * (m.radius || 0.5), m.height * 0.62, sz * (m.radius || 0.5));
+    bit.rotation.y = (sx * 9 + sz * 11) % (Math.PI * 2);
+    g.add(bit);
+  }
+  return g;
+}
+
 /** Build the visual for one ingredient (handles composed items). */
 function ingredientMesh(id) {
   const def = ITEMS[id];
   if (def.compose === 'pizza') return composePizza(def.toppings);
   if (def.compose === 'burger') return composeBurger(def.expandsTo, !!def.dish, 0);
+  if (def.compose === 'pot') return composePot(def.veg);
   const m = getModel(def.model, def.tint || null);
   if (def.scale) m.scale.multiplyScalar(def.scale);
   return m;

@@ -199,12 +199,47 @@ export const LEVELS = [
       ],
     },
   },
+  {
+    // Level 6 "Soup Kitchen" — a vegetable-soup level. Single player. Mirrors
+    // the Burger Bar ASCII structure. The cooking is the PIZZA pattern themed as
+    // a pot-on-the-stove boil: grab an empty pot (crate 4), chop onion / carrot /
+    // potato (the ONE new ingredient is onion), add all three to the pot in any
+    // order (compositional `accepts`, like pizza toppings), boil the full pot on
+    // a STOVE (cookTo → `soup`), plate the soup and serve. Over-boil burns it
+    // (burnTo) like a patty. Served on the normal plate → dirty plate → sink →
+    // verb quiz (grammar loop reused unchanged).
+    id: 'soup',
+    num: 6,
+    open: true,                  // selectable for playtest
+    name: 'Soup Kitchen',
+    emoji: '🍲',
+    style: 'B',                  // style-B kitchen for visual variety (like Pizza)
+    map: [
+      'CHHCCkrC',
+      '1......s',
+      '2.bb...s',
+      '3..P..tC',
+      '4.....CC',
+      'CCCCCCCC',
+    ],
+    crates: { 1: 'onion', 2: 'carrot', 3: 'potato', 4: 'pot_empty' },
+    // 5 bowls of soup; mix lets the player batch chops. 5 orders · 2 plates → 3
+    // washes (matches Burger Bar's grammar load).
+    orders: ['garden_soup', 'garden_soup', 'garden_soup', 'garden_soup', 'garden_soup'],
+    spawnEvery: [7, 11],
+    plates: 2,
+    starTimes: [300, 235, 185, 145],   // 1★ / 2★ / 3★(gold) / author — placeholders
+    tutorial: {
+      image: 'assets/ChatGPT/Salad.png',
+      title: 'Soup Kitchen',
+      text: 'Grab a pot, chop the onion, carrot and potato into it, boil it on the stove, then plate the soup and serve!',
+    },
+  },
 ];
 
 // Locked "coming soon" slots shown after the 3 playable levels (levels grow to
 // ~10–15; dish themes repeat). Numbers only; emoji is a decorative hint.
 export const PLACEHOLDERS = [
-  { id: 'lv6',  num: 6,  emoji: '🥗' },
   { id: 'lv7',  num: 7,  emoji: '🍔' },
   { id: 'lv8',  num: 8,  emoji: '🍕' },
   { id: 'lv9',  num: 9,  emoji: '🍨' },
@@ -229,6 +264,7 @@ export function levelModelNames(level) {
     'crate', 'crate_lid',
     'crate_lettuce', 'crate_tomatoes', 'crate_buns', 'crate_potatoes',
     'crate_cheese', 'crate_dough', 'crate_mushrooms',
+    'crate_onions', 'crate_carrots', 'pot_A', 'food_stew',
   ];
 }
 
@@ -241,4 +277,8 @@ export const CRATE_MODELS = {
   cheese: 'crate_cheese',
   dough: 'crate_dough',
   mushroom: 'crate_mushrooms',
+  onion: 'crate_onions',
+  carrot: 'crate_carrots',
+  potato: 'crate_potatoes',
+  pot_empty: 'crate',   // generic crate of clean pots (no pot-crate art in the pack)
 };

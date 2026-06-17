@@ -650,6 +650,16 @@ export class Game {
           if (!have.includes('cheese')) need.push('🧀');
           text = `add ${need.join(' + ')} first 🍕`;
         }
+        // an incomplete pot still missing a vegetable can't boil yet
+        else if (heldDef && st.type === 'stove' && !heldDef.cookTo &&
+                 (heldDef.compose === 'pot' || held.id === 'pot_empty')) {
+          const have = heldDef.veg || [];
+          const need = [];
+          if (!have.includes('onion')) need.push('🧅');
+          if (!have.includes('carrot')) need.push('🥕');
+          if (!have.includes('potato')) need.push('🥔');
+          text = `add ${need.join(' + ')} first 🍲`;
+        }
         else if (held) text = 'E — start cooking';
       }
       else if (st.type === 'sink') text = st.dirtyPlates > 0 ? 'Space — wash a plate 🧽' : 'no dirty plates';

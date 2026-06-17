@@ -94,7 +94,7 @@ export function initQA(game, save, startLevel, params) {
 
   (async () => {
     const scene = qa;
-    const lvIdx = { level1: 0, level2: 1, level3: 2, level4: 3, coop: 3, level5: 4, split: 4, question: 0, burn: 1, stars: 0, recipe: 0, recipeload: 0, washing: 0, shop: 0 }[scene] ?? 0;
+    const lvIdx = { level1: 0, level2: 1, level3: 2, level4: 3, coop: 3, level5: 4, split: 4, level6: 5, soup: 5, question: 0, burn: 1, stars: 0, recipe: 0, recipeload: 0, washing: 0, shop: 0 }[scene] ?? 0;
     if (scene === 'loading') {       // loader overlay showcase (stays up)
       ui.loading(true);
       window.__VK_READY = true;
@@ -133,6 +133,16 @@ export function initQA(game, save, startLevel, params) {
         put(7, 4, makeIngredient('burgerwip_cheese'));   // plate-less: bun + cheese (open, no patty)
         put(2, 5, makeIngredient('cheese_chopped'));     // chopped cheese slice on a board (sits on top)
       }
+      VK.tick(0.5);
+    } else if (scene === 'soup' || scene === 'level6') {
+      // soup-level showcase: a soup ticket + the pipeline staged on counters —
+      // a finished bowl of soup plated, a full pot ready to boil, and a chopped
+      // onion on the cutting board.
+      VK.spawnTicket('garden_soup');
+      VK.spawnTicket('garden_soup');
+      put(7, 4, makePlate(['soup']));                          // finished garden soup, plated
+      put(6, 4, makeIngredient('potwip_onion_carrot_potato')); // full pot, ready for the stove
+      put(2, 2, makeIngredient('onion_chopped'));              // a chopped onion on a board
       VK.tick(0.5);
     } else if (scene === 'coop') {
       // co-op helper showcase: with no demand gate it stocks both boards (slowly,

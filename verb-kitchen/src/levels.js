@@ -214,6 +214,7 @@ export const LEVELS = [
     name: 'Soup Kitchen',
     emoji: '🍲',
     style: 'B',                  // style-B kitchen for visual variety (like Pizza)
+    bareStoves: true,            // no decorative pans — you set your own POT on the hob
     map: [
       'CHHCCkrC',
       '1......s',
@@ -232,7 +233,7 @@ export const LEVELS = [
     tutorial: {
       image: 'assets/ChatGPT/Salad.png',
       title: 'Soup Kitchen',
-      text: 'Grab a pot, chop the onion, carrot and potato into it, boil it on the stove, then plate the soup and serve!',
+      text: 'Grab a pot, chop the onion, carrot and potato and tip each into the pot (E), set the full pot on a stove to boil, then plate the soup and serve!',
     },
   },
   {

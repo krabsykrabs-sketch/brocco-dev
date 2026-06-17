@@ -299,6 +299,18 @@ export class Game {
         break;
       }
       case 'board': {
+        // dump a chopped item from the board straight into a held composite (the
+        // soup POT, a pizza base, a burger bun…) — combine, then clear the board.
+        const boardInto = held && held.type === 'ing' && st.item && st.item.type === 'ing'
+          ? combine(held.id, st.item.id) : null;
+        if (boardInto) {
+          st.takeItem();
+          const r = makeIngredient(boardInto);
+          this.chef.setCarried(r, buildItemMesh(r));
+          this.fx.sparkle(st.pos.clone().setY(st.topY + 0.5));
+          audio.putdown();
+          break;
+        }
         if (held && held.type === 'ing' && !st.item) {
           const def = ITEMS[held.id];
           // a raw choppable needs the matching tool; a cut/finished item can
@@ -631,7 +643,8 @@ export class Game {
       if (st.type === 'crate') text = held ? '' : `E — grab ${ITEMS[st.crateItem].emoji}`;
       else if (st.type === 'board') {
         const heldPlate = held && held.type === 'plate' && !held.dirty;
-        if (st.item && ITEMS[st.item.id]?.interim) text = 'halfway — keep chopping!';
+        if (held && held.type === 'ing' && st.item && st.item.type === 'ing' && combine(held.id, st.item.id)) text = `E — add to the ${ITEMS[held.id].compose === 'pot' || held.id === 'pot_empty' ? 'pot 🍲' : 'mix'}`;
+        else if (st.item && ITEMS[st.item.id]?.interim) text = 'halfway — keep chopping!';
         else if (st.item && ITEMS[st.item.id]?.chopTo) text = `hold Space — ${ITEMS[st.item.id].chopVerb || 'chop'}!`;
         else if (st.item && heldPlate && ITEMS[st.item.id]?.plateable && canPlate(held.contents, st.item.id)) text = 'E — add to plate 🍽️';
         else if (st.item && !held) text = 'E — take it';

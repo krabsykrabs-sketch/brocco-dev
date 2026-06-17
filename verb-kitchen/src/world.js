@@ -108,9 +108,14 @@ export class World {
           counter.position.copy(p); counter.rotation.y = facing;
           const stove = getModel('stove_single_countertop');
           stove.position.set(p.x, 0.07, p.z); stove.rotation.y = facing;
-          const pan = getModel('pan_A');
-          pan.position.set(p.x, 1.22, p.z); pan.rotation.y = facing + Math.PI * 0.35;
-          staticG.add(counter, stove, pan);
+          staticG.add(counter, stove);
+          // a decorative frying pan — hidden on `bareStoves` levels (e.g. the
+          // soup level, where you set your own POT on the hob, not a pan)
+          if (!lv.bareStoves) {
+            const pan = getModel('pan_A');
+            pan.position.set(p.x, 1.22, p.z); pan.rotation.y = facing + Math.PI * 0.35;
+            staticG.add(pan);
+          }
           st = new Station('stove', c, r, p, 1.28);
         } else if (ch === 'o') {
           const oven = getModel(lv.id === 'pizzeria' ? 'pizza_oven' : 'oven');

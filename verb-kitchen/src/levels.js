@@ -233,7 +233,7 @@ export const LEVELS = [
     tutorial: {
       image: 'assets/ChatGPT/Salad.png',
       title: 'Soup Kitchen',
-      text: 'Two pots wait on the stoves! Grab a veg and drop it into a pot (E) — carrot + potato makes one soup, onion + mushroom another. When it boils, scoop it into a bowl and serve!',
+      text: 'Two pots wait on the stoves! Chop the veg on the boards, then tip each into a pot (E) — carrot + potato makes one soup, onion + mushroom another. When it boils, scoop it into a bowl and serve!',
     },
   },
   {

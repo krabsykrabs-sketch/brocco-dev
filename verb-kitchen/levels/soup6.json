@@ -41,6 +41,8 @@
     { "model": "kitchencounter_innercorner_backsplash_styleB", "col": 1, "row": 6, "rot": 2 },
     { "model": "kitchencounter_outercorner_styleB", "col": 3, "row": 3, "rot": 0 },
     { "model": "kitchencounter_outercorner_styleB", "col": 4, "row": 3, "rot": 1 },
+    { "model": "cuttingboard", "col": 3, "row": 3, "rot": 0 },
+    { "model": "cuttingboard", "col": 4, "row": 3, "rot": 0 },
     { "model": "dishrack", "col": 7, "row": 3, "rot": 1 }
   ]
 }

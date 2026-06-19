@@ -99,15 +99,12 @@ export const ITEMS = {
 // a half-filled pot (one veg) shows broth + that one veg (distinguished by the
 // broth colour), and the player can still add the matching second veg.
 export const POT_LAYERS = ['carrot', 'potato', 'onion', 'mushroom'];
-// held veg id → the veg token it deposits into the pot. Both the RAW veg (the
-// soup layout has no cutting boards — you grab a veg and tip it straight in) and
-// its CHOPPED form (if a board IS present) drop the same token; the pot always
-// renders the veg as cut pieces (POT_VEG_MODELS) regardless.
+// held CHOPPED-veg id → the veg token it deposits into the pot. Veg are chopped
+// on the island's cutting boards first (two-stage chop, like the burger level),
+// then the chopped form is tipped into a stove-pot.
 const POT_ADDERS = {
-  carrot: 'carrot', carrot_chopped: 'carrot',
-  potato: 'potato', potato_chopped: 'potato',
-  onion: 'onion', onion_chopped: 'onion',
-  mushroom: 'mushroom', mushroom_chopped: 'mushroom',
+  carrot_chopped: 'carrot', potato_chopped: 'potato',
+  onion_chopped: 'onion', mushroom_chopped: 'mushroom',
 };
 // only a COMPLETE recipe set can be boiled (canonical comma-join → soup-in-pot)
 const POT_BOILS = {

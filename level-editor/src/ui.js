@@ -35,7 +35,11 @@ export class UI {
     ed.onPlaceMode = (name) => this._reflectPlace(name);
     ed.onTool = (tool) => this._reflectTool(tool);
     ed.onRotation = (q) => { $('rotReadout').textContent = (q * 90) + '°'; };
-    ed.onGrid = (cols, rows) => { $('colsInput').value = cols; $('rowsInput').value = rows; };
+    ed.onGrid = (cols, rows) => {
+      $('colsInput').value = cols; $('rowsInput').value = rows;
+      const gs = $('gridSize'); if (gs) gs.textContent = `${cols} × ${rows}`;
+      const gb = $('gridBtnSize'); if (gb) gb.textContent = `${cols}×${rows}`;
+    };
     ed.onSelect = (rec) => this._reflectSelection(rec);
   }
 
@@ -206,6 +210,20 @@ export class UI {
 
     $('toolSelect').onclick = () => { ed.clearPlaceMode(); ed.setTool('select'); };
     $('toolErase').onclick = () => ed.setTool('erase');
+
+    // Change-Grid popover: one button toggles a compass that adds/removes a
+    // row/column on any of the four sides; the exact-size inputs still apply.
+    const gp = $('gridPanel');
+    $('btnChangeGrid').onclick = () => { gp.hidden = !gp.hidden; };
+    gp.querySelectorAll('button[data-side]').forEach((b) => {
+      b.onclick = () => ed.growGrid(b.dataset.side, b.dataset.add === '1');
+    });
+    // click anywhere outside the popover (incl. the 3D stage) closes it
+    document.addEventListener('pointerdown', (e) => {
+      if (gp.hidden) return;
+      if (gp.contains(e.target) || $('btnChangeGrid').contains(e.target)) return;
+      gp.hidden = true;
+    });
 
     $('applyGrid').onclick = () => {
       const c = parseInt($('colsInput').value, 10);

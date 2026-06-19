@@ -580,6 +580,44 @@ export class Editor {
     this._changed();
   }
 
+  /** Add or remove ONE row/column on a given side — north | south | east | west.
+   *  `add` true grows that edge, false trims it (dropping objects on the removed
+   *  edge). Existing content keeps its place: for the north/west edges every
+   *  object's col/row is shifted, and the camera is panned by the same world
+   *  amount so the level stays visually anchored (the view doesn't reset). This
+   *  is what lets the grid grow/shrink in all four directions, not just S/E. */
+  growGrid(side, add) {
+    const d = add ? 1 : -1;
+    const isRow = (side === 'north' || side === 'south');
+    const shift = (side === 'north' || side === 'west') ? d : 0;   // index shift for the NW edges
+    const newCols = this.state.cols + (isRow ? 0 : d);
+    const newRows = this.state.rows + (isRow ? d : 0);
+    if (newCols < 1 || newRows < 1 || newCols > 60 || newRows > 60) {
+      this.onStatus && this.onStatus(add ? 'Grid at max (60)' : 'Grid at min (1)');
+      return;
+    }
+    if (shift) for (const o of this.state.objects) { if (isRow) o.row += shift; else o.col += shift; }
+    this.state.cols = newCols; this.state.rows = newRows;
+
+    const fits = (o) => o.col >= 0 && o.row >= 0 && (o.col + (o.w || 1) <= newCols) && (o.row + (o.d || 1) <= newRows);
+    const dropped = this.state.objects.filter((o) => !fits(o));
+    for (const o of dropped) if (o.node) this.levelGroup.remove(o.node);
+    this.state.objects = this.state.objects.filter(fits);
+    if (this.selected && dropped.includes(this.selected)) this.select(null);
+
+    this._buildGrid();
+    this._restackAll();
+    // pan the camera by the same world shift the content underwent, so the level
+    // stays put on screen and the camera angle/zoom are preserved.
+    const worldShift = (shift - d / 2) * TILE;
+    if (isRow) this.controls.target.z += worldShift; else this.controls.target.x += worldShift;
+    this.controls.update();
+
+    this.onGrid && this.onGrid(newCols, newRows);
+    if (dropped.length) this.onStatus && this.onStatus(`Trimmed ${dropped.length} object${dropped.length === 1 ? '' : 's'} on the ${side} edge`);
+    this._changed();
+  }
+
   resetView() { this.controls.frame(this.state.cols, this.state.rows, TILE); }
 
   _clearObjects() {

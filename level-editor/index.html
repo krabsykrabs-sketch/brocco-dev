@@ -47,6 +47,26 @@
   button.tool.active { background:var(--amber); color:#3a2a00; border-color:transparent; }
   button.danger.active { background:var(--coral); color:#3a0d0d; border-color:transparent; }
 
+  /* ---- change-grid popover ---- */
+  #gridGrp { position:relative; }
+  #btnChangeGrid .szchip { background:var(--panel); border:1px solid var(--line);
+    border-radius:5px; padding:1px 5px; margin-left:5px; font-size:11px; color:var(--amber); font-weight:800; }
+  #gridPanel { position:absolute; top:calc(100% + 7px); left:0; z-index:60;
+    background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:13px;
+    box-shadow:0 14px 36px rgba(0,0,0,.5); width:250px; }
+  #gridPanel[hidden] { display:none; }
+  .gp-title { font-size:13px; font-weight:800; }
+  .gp-title span { color:var(--amber); margin-left:4px; }
+  .gp-hint { font-size:11px; color:var(--muted); line-height:1.45; margin:6px 0 11px; }
+  .compass { display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px 6px; align-items:center; justify-items:center; }
+  .cdir { display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .cdir > div { display:flex; gap:4px; }
+  .cdir label { font-size:10px; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.4px; }
+  .cdir button { padding:3px 0; width:28px; font-size:15px; line-height:1; font-weight:800; }
+  .cmid { color:var(--muted); font-size:20px; }
+  .gp-sep { height:1px; background:var(--line); margin:12px 0 10px; }
+  .gp-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .gp-row .lbl { width:100%; margin-bottom:2px; }
   #rotReadout { color:var(--amber); font-weight:800; font-size:13px; min-width:42px; text-align:center; }
   #saveStatus { color:var(--muted); font-size:12px; min-width:96px; text-align:right; }
 
@@ -131,12 +151,31 @@
     </div>
     <div class="sep"></div>
 
-    <div class="grp">
-      <label class="lbl">Grid</label>
-      <input type="number" id="colsInput" min="1" max="60" value="12" />
-      <span class="lbl">×</span>
-      <input type="number" id="rowsInput" min="1" max="60" value="12" />
-      <button id="applyGrid">Apply</button>
+    <div class="grp" id="gridGrp">
+      <button id="btnChangeGrid">⊞ Change Grid <span id="gridBtnSize" class="szchip">12×12</span></button>
+      <div id="gridPanel" hidden>
+        <div class="gp-title">Resize grid <span id="gridSize">12 × 12</span></div>
+        <div class="gp-hint">Add (+) or remove (−) a row/column on any side — your level stays put.</div>
+        <div class="compass">
+          <span></span>
+          <div class="cdir"><label>North</label><div><button data-side="north" data-add="0" title="remove the top row">−</button><button data-side="north" data-add="1" title="add a row on top">+</button></div></div>
+          <span></span>
+          <div class="cdir"><label>West</label><div><button data-side="west" data-add="0" title="remove the left column">−</button><button data-side="west" data-add="1" title="add a column on the left">+</button></div></div>
+          <span class="cmid">⊞</span>
+          <div class="cdir"><label>East</label><div><button data-side="east" data-add="0" title="remove the right column">−</button><button data-side="east" data-add="1" title="add a column on the right">+</button></div></div>
+          <span></span>
+          <div class="cdir"><label>South</label><div><button data-side="south" data-add="0" title="remove the bottom row">−</button><button data-side="south" data-add="1" title="add a row at the bottom">+</button></div></div>
+          <span></span>
+        </div>
+        <div class="gp-sep"></div>
+        <div class="gp-row">
+          <span class="lbl">Set exact size</span>
+          <input type="number" id="colsInput" min="1" max="60" value="12" />
+          <span class="lbl">×</span>
+          <input type="number" id="rowsInput" min="1" max="60" value="12" />
+          <button id="applyGrid">Apply</button>
+        </div>
+      </div>
     </div>
     <div class="sep"></div>
 

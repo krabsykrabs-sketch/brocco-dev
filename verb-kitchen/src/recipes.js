@@ -303,9 +303,12 @@ export const DISHES = {
   // reads as a bowl of ice cream sitting on the plate (the plate stays the
   // washable vessel → the sink grammar is untouched). Variety: a single-scoop +
   // cherry, a three-scoop mix (no topping), and a two-scoop deluxe + cherry.
-  sundae_vanilla:    { name: 'Vanilla Sundae',    emoji: '🍨', parts: ['scoop_vanilla', 'cherry'],                              coins: 25, model: 'icecream_bowl_icecream_vanilla', icons: '🍨🍒' },
-  sundae_neapolitan: { name: 'Neapolitan Sundae', emoji: '🍨', parts: ['scoop_vanilla', 'scoop_chocolate', 'scoop_strawberry'], coins: 40, model: 'icecream_bowl_decorated_A',      icons: '🍨🍫🍓' },
-  sundae_deluxe:     { name: 'Cherry Deluxe',     emoji: '🍨', parts: ['scoop_chocolate', 'scoop_strawberry', 'cherry', 'syrup'], coins: 45, model: 'icecream_bowl_cherries',        icons: '🍫🍓🍒🍯' },
+  // Ice-cream level dishes — scoop SETS served in a bowl (no cherry/syrup source
+  // in the editor layout yet; those items stay defined for when the user adds a
+  // topping source). Order-free exact-set match, like the salad.
+  sundae_vanilla:    { name: 'Vanilla Scoop',     emoji: '🍨', parts: ['scoop_vanilla'],                                        coins: 20, model: 'icecream_bowl_icecream_vanilla', icons: '🍨' },
+  sundae_deluxe:     { name: 'Berry Duo',         emoji: '🍨', parts: ['scoop_strawberry', 'scoop_chocolate'],                  coins: 32, model: 'icecream_bowl_cherries',        icons: '🍓🍫' },
+  sundae_neapolitan: { name: 'Neapolitan Sundae', emoji: '🍨', parts: ['scoop_vanilla', 'scoop_chocolate', 'scoop_strawberry'], coins: 44, model: 'icecream_bowl_decorated_A',      icons: '🍨🍫🍓' },
 };
 
 export function isBurgerDish(dishId) {

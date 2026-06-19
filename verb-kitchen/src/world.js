@@ -314,6 +314,8 @@ export class World {
       if (m === 'dishrack') return 'rack';
       if (m === 'crate') return 'trash';          // an EMPTY crate = trash bin (like the burger level)
       if (m.startsWith('crate_')) return 'crate';
+      if (m.startsWith('icecream_container_icecream')) return 'crate';   // ice-cream flavour tubs
+
       if (m.startsWith('kitchencounter_')) return 'counter';
       return null;
     };

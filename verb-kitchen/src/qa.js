@@ -146,13 +146,13 @@ export function initQA(game, save, startLevel, params) {
       VK.givePlate(['cp_soup']);   // a finished bowl of soup in hand
       VK.tick(0.5);
     } else if (scene === 'icecream' || scene === 'level7') {
-      // sundae showcase: a finished Cherry Deluxe (with the chocolate-syrup
-      // drizzle) + a part-built one. The reusable syrup bottle sits on its
-      // counter via startItems (6,2) — left in place here.
-      VK.spawnTicket('sundae_deluxe');
+      // ice-cream showcase (bowls, cold assembly): a ticket per recipe, a
+      // finished Neapolitan bowl in hand, and a part-built bowl on a counter.
       VK.spawnTicket('sundae_neapolitan');
-      put(6, 1, makePlate(['scoop_chocolate', 'scoop_strawberry', 'cherry', 'syrup']));  // finished, drizzled deluxe
-      put(7, 3, makePlate(['scoop_vanilla']));                                            // part-built sundae
+      VK.spawnTicket('sundae_deluxe');
+      VK.givePlate(['scoop_vanilla', 'scoop_chocolate', 'scoop_strawberry']);   // finished Neapolitan in hand
+      const counter = game.world.stations.find((s) => s.type === 'counter');
+      if (counter) counter.setItem(makePlate(['scoop_strawberry']), false);     // a part-built bowl
       VK.tick(0.5);
     } else if (scene === 'coop') {
       // co-op helper showcase: with no demand gate it stocks both boards (slowly,

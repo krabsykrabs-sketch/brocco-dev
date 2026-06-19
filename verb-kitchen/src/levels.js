@@ -245,37 +245,28 @@ export const LEVELS = [
     // but cold. A cherry is an extra plateable topping. The plated sundae renders
     // a finished ice-cream-bowl model (so it reads as a bowl of ice cream), but
     // the plate underneath stays the washable vessel → the sink quiz is unchanged.
-    // Three distinct sundaes (single-scoop+cherry / three-scoop mix / two-scoop
-    // deluxe+cherry) give variety + a topping assembly step. style 'B' kitchen.
+    // Three distinct sundaes (1-scoop / 2-scoop / 3-scoop) give variety. Editor
+    // JSON layout (levels/icecream7.json, the user's `Ice.json` completed to a
+    // playable 8×6) served in BOWLS. style 'B' kitchen.
     id: 'sundae',
     num: 7,
     open: true,                  // selectable for playtest
     name: 'Sundae Sunday',
     emoji: '🍨',
     style: 'B',
-    map: [
-      'CHHCCkrC',
-      '1.....CC',
-      '2.....CC',
-      '3..P...C',
-      '4.....tC',
-      'CCCCCCCC',
-    ],
-    // 1/2/3 = the three flavour tubs; 4 = the cherry crate (generic crate art).
-    crates: { 1: 'scoop_vanilla', 2: 'scoop_chocolate', 3: 'scoop_strawberry', 4: 'cherry' },
-    // one reusable chocolate-syrup bottle on a counter — drizzle it on for the
-    // Cherry Deluxe (the deluxe's extra assembly step).
-    startItems: [{ c: 6, r: 2, item: 'choc_syrup' }],
+    jsonUrl: 'levels/icecream7.json',
+    vessel: 'bowl',              // sundaes are served in a bowl (no plate)
+    spawn: { col: 4, row: 3 },   // chef start in JSON cell coords
     // a mix of the three sundaes; lets the player batch scoops. 6 orders · 2
-    // plates → 4 washes (washing stays load-bearing — below the order count).
+    // bowls → washing stays load-bearing (below the order count).
     orders: ['sundae_vanilla', 'sundae_neapolitan', 'sundae_deluxe', 'sundae_vanilla', 'sundae_deluxe', 'sundae_neapolitan'],
     spawnEvery: [5, 8],
-    plates: 2,
+    plates: 2,                   // 2 clean bowls to start
     starTimes: [260, 200, 155, 120],   // 1★ / 2★ / 3★(gold) / author — placeholders
     tutorial: {
       image: 'assets/ChatGPT/Salad.png',
       title: 'Sundae Sunday',
-      text: 'No cooking today! Grab a bowl, scoop ice cream from the tubs, add a cherry (and drizzle chocolate syrup for a Deluxe), serve — then wash up!',
+      text: 'No cooking today! Grab a bowl, scoop ice cream from the flavour tubs (vanilla, strawberry, chocolate) — one scoop, two for a Berry Duo, or all three for a Neapolitan — then serve and wash up!',
     },
   },
 ];

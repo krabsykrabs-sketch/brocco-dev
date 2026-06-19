@@ -1,0 +1,136 @@
+{
+  "asset": {
+    "generator": "krabsy build-tiles.py",
+    "version": "2.0"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "tile_brown_dark"
+    }
+  ],
+  "materials": [
+    {
+      "name": "restaurant",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicFactor": 0,
+        "roughnessFactor": 0.5
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "tile_brown_dark",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    }
+  ],
+  "images": [
+    {
+      "mimeType": "image/png",
+      "name": "restaurantbits_extra",
+      "uri": "restaurantbits_extra.png"
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC3",
+      "min": [
+        -1.0,
+        -0.5,
+        -1.0
+      ],
+      "max": [
+        1.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5123,
+      "count": 36,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 288,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 288,
+      "byteLength": 288,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 576,
+      "byteLength": 192,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 768,
+      "byteLength": 72,
+      "target": 34963
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 840,
+      "uri": "data:application/octet-stream;base64,AACAvwAAAAAAAIC/AACAPwAAAAAAAIC/AACAPwAAAAAAAIA/AACAvwAAAAAAAIA/AACAvwAAAL8AAIC/AACAPwAAAL8AAIC/AACAPwAAAL8AAIA/AACAvwAAAL8AAIA/AACAPwAAAL8AAIC/AACAPwAAAAAAAIC/AACAPwAAAAAAAIA/AACAPwAAAL8AAIA/AACAvwAAAL8AAIC/AACAvwAAAAAAAIC/AACAvwAAAAAAAIA/AACAvwAAAL8AAIA/AACAvwAAAL8AAIA/AACAPwAAAL8AAIA/AACAPwAAAAAAAIA/AACAvwAAAAAAAIA/AACAvwAAAL8AAIC/AACAPwAAAL8AAIC/AACAPwAAAAAAAIC/AACAvwAAAAAAAIC/AAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/ssFUP5IKCj6ywVQ/kgoKPrLBVD+SCgo+ssFUP5IKCj6ywVQ/kgoKPrLBVD+SCgo+ssFUP5IKCj6ywVQ/kgoKPrLBVD+SCgo+ssFUP5IKCj6ywVQ/kgoKPrLBVD+SCgo+ssFUP5IKCj6ywVQ/kgoKPrLBVD+SCgo+ssFUP5IKCj6ywVQ/kgoKPrLBVD+SCgo+ssFUP5IKCj6ywVQ/kgoKPrLBVD+SCgo+ssFUP5IKCj6ywVQ/kgoKPrLBVD+SCgo+AAACAAEAAAADAAIABAAFAAYABAAGAAcACAAJAAoACAAKAAsADAAOAA0ADAAPAA4AEAARABIAEAASABMAFAAWABUAFAAXABYA"
+    }
+  ]
+}

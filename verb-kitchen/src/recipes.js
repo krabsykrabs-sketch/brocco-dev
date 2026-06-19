@@ -45,26 +45,30 @@ export const ITEMS = {
   pizza_burnt:     { model: 'food_pizza_cheese_plated',    emoji: '💀', scale: 0.66, tint: '#2a2118', trashOnly: true },
 
   // --- level 6: vegetable soup ---
-  // Build a soup in a POT by chopping three vegetables (onion is the ONE new
-  // ingredient) and adding them in ANY order — exactly like pizza toppings on a
-  // dough base. The empty pot comes from a crate; each veg is a TWO-stage chop
-  // (raw → half → chopped), like lettuce/cheese: raw → `_half` (interim, the
-  // diced look) → final (rings / pieces / mashed). A pot-in-progress is
-  // identified by the SET of veg it holds, so build order never matters. Only
-  // the COMPLETE pot is cookable: boil it on the stove (cookTo) → a finished
-  // `soup` (a stew bowl, plateable) → plate → serve. Over-boil burns it (burnTo).
-  onion:           { model: 'food_ingredient_onion',          emoji: '🧅', chopTo: 'onion_half', chopTime: 1.8 },
-  onion_half:      { model: 'food_ingredient_onion_chopped',  emoji: '🧅', chopTo: 'onion_chopped', chopTime: 1.8, interim: true },
-  onion_chopped:   { model: 'food_ingredient_onion_rings',    emoji: '🧅' },
+  // Pots live ON the stoves: the player chops veg and tips them STRAIGHT into a
+  // stove-pot, which shows broth + the veg as it fills (the pot-in-progress is
+  // identified by the SET of veg it holds, order-free). A complete recipe boils
+  // (cookTo) into a finished soup-in-the-pot; you then scoop it into a BOWL
+  // (`scoop`) and serve. TWO 2-veg recipes: carrot+potato = Carrot–Potato Soup
+  // (orange `food_stew`); onion+mushroom = Onion–Mushroom Soup (same model tinted
+  // creamy). Veg are a TWO-stage chop (raw → `_half` interim → `_chopped` final).
   carrot:          { model: 'food_ingredient_carrot',         emoji: '🥕', chopTo: 'carrot_half', chopTime: 1.8 },
   carrot_half:     { model: 'food_ingredient_carrot_chopped', emoji: '🥕', chopTo: 'carrot_chopped', chopTime: 1.8, interim: true },
   carrot_chopped:  { model: 'food_ingredient_carrot_pieces',  emoji: '🥕' },
   potato:          { model: 'food_ingredient_potato',         emoji: '🥔', chopTo: 'potato_half', chopTime: 1.8 },
   potato_half:     { model: 'food_ingredient_potato_chopped', emoji: '🥔', chopTo: 'potato_chopped', chopTime: 1.8, interim: true },
   potato_chopped:  { model: 'food_ingredient_potato_mashed',  emoji: '🥔' },
-  pot_empty:       { model: 'pot_A',                          emoji: '🍲', scale: 0.9 },   // .accepts wired below
-  soup:            { model: 'food_stew',                      emoji: '🍲', scale: 0.9, plateable: true, burnTo: 'soup_burnt', burnTime: 12, steamy: true },
-  soup_burnt:      { model: 'food_stew',                      emoji: '💀', scale: 0.9, tint: '#2a2118', trashOnly: true },
+  onion:           { model: 'food_ingredient_onion',          emoji: '🧅', chopTo: 'onion_half', chopTime: 1.8 },
+  onion_half:      { model: 'food_ingredient_onion_chopped',  emoji: '🧅', chopTo: 'onion_chopped', chopTime: 1.8, interim: true },
+  onion_chopped:   { model: 'food_ingredient_onion_rings',    emoji: '🧅' },
+  // (mushroom raw→half→chopped reuses the pizza mushroom chain defined below.)
+  pot_empty:       { model: 'pot_B',                          emoji: '🍲' },   // empty pot on a stove; .accepts wired below
+  // cooked soup sitting IN the pot — scoop it into a bowl. `scoop` = the bowl soup.
+  pot_soup_cp:     { model: 'pot_B_stew',                     emoji: '🍲', scoop: 'cp_soup', steamy: true },
+  pot_soup_om:     { model: 'pot_B_stew', tint: '#e9dcb6',    emoji: '🍲', scoop: 'om_soup', steamy: true },
+  // the soup once it's in a bowl (the served dish content). Renders the stew bowl.
+  cp_soup:         { model: 'food_stew',                      emoji: '🥕', plateable: true, steamy: true },
+  om_soup:         { model: 'food_stew', tint: '#e9dcb6',     emoji: '🍄', plateable: true, steamy: true },
 
   // --- level 7: ice cream / sundaes (the first COLD-ASSEMBLY level: no stove,
   // no cutting board, no cooking) ---
@@ -90,13 +94,30 @@ export const ITEMS = {
 
 // ---------- pot-in-progress states (order-free veg assembly) ----------
 // Vegetables in canonical render order. A WIP pot's identity is the SUBSET it
-// holds; build order never matters. Only the full set boils → soup.
-export const POT_LAYERS = ['onion', 'carrot', 'potato'];
-// held chopped-veg id → the veg token it deposits into the pot
-const POT_ADDERS = { onion_chopped: 'onion', carrot_chopped: 'carrot', potato_chopped: 'potato' };
-// only the COMPLETE veg set can be boiled (canonical comma-join → soup)
-const POT_BOILS = { 'onion,carrot,potato': { cookTo: 'soup', cookTime: 11 } };
-const POT_EMOJI = { onion: '🧅', carrot: '🥕', potato: '🥔' };
+// holds; build order never matters. Only a COMPLETE 2-veg recipe set boils →
+// soup. Two recipes share the four veg: carrot+potato and onion+mushroom — so
+// a half-filled pot (one veg) shows broth + that one veg (distinguished by the
+// broth colour), and the player can still add the matching second veg.
+export const POT_LAYERS = ['carrot', 'potato', 'onion', 'mushroom'];
+// held veg id → the veg token it deposits into the pot. Both the RAW veg (the
+// soup layout has no cutting boards — you grab a veg and tip it straight in) and
+// its CHOPPED form (if a board IS present) drop the same token; the pot always
+// renders the veg as cut pieces (POT_VEG_MODELS) regardless.
+const POT_ADDERS = {
+  carrot: 'carrot', carrot_chopped: 'carrot',
+  potato: 'potato', potato_chopped: 'potato',
+  onion: 'onion', onion_chopped: 'onion',
+  mushroom: 'mushroom', mushroom_chopped: 'mushroom',
+};
+// only a COMPLETE recipe set can be boiled (canonical comma-join → soup-in-pot)
+const POT_BOILS = {
+  'carrot,potato':   { cookTo: 'pot_soup_cp', cookTime: 9 },
+  'onion,mushroom':  { cookTo: 'pot_soup_om', cookTime: 9 },
+};
+const POT_EMOJI = { carrot: '🥕', potato: '🥔', onion: '🧅', mushroom: '🍄' };
+// the two valid recipes as canonical token sets (only these get accept-wiring
+// beyond the first veg, so you can't mix carrot+onion etc.)
+const POT_RECIPES = [['carrot', 'potato'], ['onion', 'mushroom']];
 
 const potTokens = (set) => POT_LAYERS.filter((t) => set.has(t));
 /** Canonical id for a veg set in the pot: the empty set is the bare pot. */
@@ -105,37 +126,61 @@ export function potWipId(set) {
   return t.length ? 'potwip_' + t.join('_') : 'pot_empty';
 }
 
-// Generate an ITEMS entry for every non-empty veg subset, wiring each (incl. the
-// empty `pot_empty`) to accept any chopped veg it doesn't yet hold.
+// which recipe (if any) a single veg belongs to, and the OTHER veg it pairs with
+const POT_PARTNER = {};               // veg → the veg that completes its recipe
+const POT_BROTH = {};                 // veg/recipe → broth tint (color of the interim)
+for (const [a, b] of POT_RECIPES) { POT_PARTNER[a] = b; POT_PARTNER[b] = a; }
+// broth colour by recipe (which soup is forming): carrot–potato = orange stew,
+// onion–mushroom = creamy. A one-veg pot already shows its recipe's broth.
+const CP_BROTH = '#d8761e', OM_BROTH = '#e9dcb6';
+POT_BROTH.carrot = POT_BROTH.potato = CP_BROTH;
+POT_BROTH.onion = POT_BROTH.mushroom = OM_BROTH;
+
+// Generate the valid pot states: empty, each single veg (interim broth + that
+// veg), and the two complete 2-veg recipes (boilable). Invalid mixes (e.g.
+// carrot+onion) are never created — a one-veg pot only accepts its partner.
 (function buildPotStates() {
-  const n = POT_LAYERS.length;
-  for (let mask = 0; mask < (1 << n); mask++) {
-    const set = new Set();
-    for (let i = 0; i < n; i++) if (mask & (1 << i)) set.add(POT_LAYERS[i]);
-    const id = potWipId(set);
+  // empty pot accepts any first chopped veg
+  const emptyAccepts = {};
+  for (const [held, token] of Object.entries(POT_ADDERS)) emptyAccepts[held] = potWipId(new Set([token]));
+  ITEMS.pot_empty.accepts = emptyAccepts;
+
+  for (const token of POT_LAYERS) {
+    // one-veg interim state: broth of its recipe + this veg, accepts its partner
+    // (in EITHER raw or chopped form → the completed recipe pot)
+    const id = potWipId(new Set([token]));
+    const partner = POT_PARTNER[token];
     const accepts = {};
-    for (const [held, token] of Object.entries(POT_ADDERS)) {
-      if (set.has(token)) continue;
-      const next = new Set(set); next.add(token);
-      accepts[held] = potWipId(next);
+    for (const [held, tok] of Object.entries(POT_ADDERS)) {
+      if (tok === partner) accepts[held] = potWipId(new Set([token, partner]));
     }
-    if (id === 'pot_empty') { ITEMS.pot_empty.accepts = accepts; continue; }
-    const tokens = potTokens(set);
     ITEMS[id] = {
-      compose: 'pot', veg: tokens,
+      compose: 'pot', veg: [token], broth: POT_BROTH[token],
+      emoji: POT_EMOJI[token], accepts,
+    };
+  }
+
+  for (const recipe of POT_RECIPES) {
+    // complete recipe: both veg + broth, boilable, no further accepts
+    const set = new Set(recipe);
+    const tokens = potTokens(set);
+    const id = potWipId(set);
+    ITEMS[id] = {
+      compose: 'pot', veg: tokens, broth: POT_BROTH[tokens[0]],
       emoji: tokens.map((t) => POT_EMOJI[t]).join(''),
-      accepts,
       ...(POT_BOILS[tokens.join(',')] || {}),
     };
   }
 })();
 
 // Scatter models used to dress an in-progress pot per vegetable (the final
-// chopped look: rings / pieces / mashed, matching each veg's `_chopped` item).
+// chopped look: rings / pieces / mashed / mushroom bits — matching each veg's
+// `_chopped` item).
 export const POT_VEG_MODELS = {
-  onion: 'food_ingredient_onion_rings',
   carrot: 'food_ingredient_carrot_pieces',
   potato: 'food_ingredient_potato_mashed',
+  onion: 'food_ingredient_onion_rings',
+  mushroom: 'food_ingredient_mushroom_pieces',
 };
 
 // ---------- pizza-in-progress states (order-free assembly) ----------
@@ -253,7 +298,8 @@ export const DISHES = {
   bigburger:       { name: 'Big Burger',   emoji: '🍔⭐', parts: ['bun', 'patty_cooked', 'cheese_chopped', 'lettuce_chopped'], coins: 40, model: null, icons: '🍞🍖🧀🥬' },
   pizza_cheese:    { name: 'Cheese Pizza',    emoji: '🍕', parts: ['pizza_cheese'],    coins: 40, model: 'food_pizza_cheese_plated',    icons: '🥫🧀' },
   pizza_mushroom:  { name: 'Mushroom Pizza',  emoji: '🍕', parts: ['pizza_mushroom'],  coins: 40, model: 'food_pizza_mushroom_plated',  icons: '🥫🧀🍄' },
-  garden_soup:     { name: 'Garden Soup',     emoji: '🍲', parts: ['soup'],            coins: 40, model: 'food_stew',                   icons: '🧅🥕🥔' },
+  carrot_potato_soup:  { name: 'Carrot–Potato Soup',  emoji: '🍲', parts: ['cp_soup'], coins: 40, model: 'food_stew',                model_tint: null,      icons: '🥕🥔' },
+  onion_mushroom_soup: { name: 'Onion–Mushroom Soup', emoji: '🍲', parts: ['om_soup'], coins: 40, model: 'food_stew',                model_tint: '#e9dcb6', icons: '🧅🍄' },
   // --- level 7 sundaes (cold assembly; served in a bowl on the washable plate) ---
   // Each sundae is an exact, distinct SET of plateable scoops/cherry (order-free,
   // like the salad). The plated dish renders a finished ice-cream-bowl model so it
@@ -289,6 +335,21 @@ export function canPlate(contents, extra) {
   return parts.every((p) => !contents.includes(p));
 }
 
+/** True for any pot that lives on a stove: the empty pot, a veg WIP, or boiled soup. */
+export function isPotItem(id) {
+  const d = ITEMS[id];
+  return id === 'pot_empty' || !!(d && (d.compose === 'pot' || d.scoop));
+}
+
+/** Hint for a stove-pot that still needs veg: which recipe(s) it can still become. */
+export function potRecipeHint(have) {
+  const opts = POT_RECIPES
+    .filter((r) => have.every((v) => r.includes(v)))
+    .map((r) => r.filter((v) => !have.includes(v)).map((v) => POT_EMOJI[v]).join(' + '))
+    .filter((s) => s.length);
+  return opts.length ? `add ${opts.join(' or ')} 🍲` : 'pot full 🍲';
+}
+
 /** Counter-top combine (pizza assembly): base item + held item → result id or null. */
 export function combine(baseId, heldId) {
   const def = ITEMS[baseId];
@@ -304,6 +365,6 @@ export function itemModelNames() {
   for (const m of Object.values(BURGER_LAYER_MODELS)) names.add(m);
   for (const m of Object.values(POT_VEG_MODELS)) names.add(m);
   ['food_ingredient_bun_top', 'food_ingredient_bun_bottom', 'food_ingredient_dough_base',
-   'plate', 'plate_dirty'].forEach((m) => names.add(m));
+   'plate', 'plate_dirty', 'bowl', 'bowl_dirty'].forEach((m) => names.add(m));
   return [...names];
 }

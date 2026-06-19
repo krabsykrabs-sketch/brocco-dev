@@ -135,14 +135,15 @@ export function initQA(game, save, startLevel, params) {
       }
       VK.tick(0.5);
     } else if (scene === 'soup' || scene === 'level6') {
-      // soup-level showcase: a soup ticket + the pipeline staged on counters —
-      // a finished bowl of soup plated, a full pot ready to boil, and a chopped
-      // onion on the cutting board.
-      VK.spawnTicket('garden_soup');
-      VK.spawnTicket('garden_soup');
-      put(7, 4, makePlate(['soup']));                          // finished garden soup, plated
-      put(6, 4, makeIngredient('potwip_onion_carrot_potato')); // full pot, ready for the stove
-      put(2, 2, makeIngredient('onion_chopped'));              // a chopped onion on a board
+      // soup-level showcase (bowls + stove-pots): one ticket per recipe, a cooked
+      // carrot–potato pot ready to scoop on one stove, a half-filled onion pot
+      // (creamy broth) on the other, and a finished bowl of soup in hand.
+      VK.spawnTicket('carrot_potato_soup');
+      VK.spawnTicket('onion_mushroom_soup');
+      const stoves = game.world.stations.filter((s) => s.type === 'stove');
+      if (stoves[0]) { stoves[0].setItem(makeIngredient('pot_soup_cp'), false); stoves[0].state = 'ready'; }
+      if (stoves[1]) { stoves[1].setItem(makeIngredient('potwip_onion'), false); }
+      VK.givePlate(['cp_soup']);   // a finished bowl of soup in hand
       VK.tick(0.5);
     } else if (scene === 'icecream' || scene === 'level7') {
       // sundae showcase: a finished Cherry Deluxe (with the chocolate-syrup

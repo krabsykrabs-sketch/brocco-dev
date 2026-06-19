@@ -13,6 +13,17 @@ export function makePlate(contents = [], dirty = false) {
 const ITEM_SCALE = 0.95;
 const sauceMat = new THREE.MeshStandardMaterial({ color: 0xd2402e, roughness: 0.85 });
 
+// ---------- serving vessel (per level) ----------
+// Most levels plate on a `plate`; the soup level serves in a `bowl` instead.
+// One module-level switch (set by game.startLevel) so every render path — the
+// carried/served vessel, the rack stack, the dirty-sink pile — uses the right
+// model without threading it through makePlate everywhere.
+let VESSEL = 'plate';
+export function setVessel(v) { VESSEL = (v === 'bowl') ? 'bowl' : 'plate'; }
+const vesselModel = (dirty) => VESSEL === 'bowl'
+  ? (dirty ? 'bowl_dirty' : 'bowl')
+  : (dirty ? 'plate_dirty' : 'plate');
+
 // Pizzas read better small: the dough model alone is nearly plate-sized.
 const PIZZA_SCALE = 0.72;
 
@@ -90,23 +101,35 @@ function composeBurger(contents, closed, baseY = 0) {
   return g;
 }
 
-/** Pot-in-progress: the pot model + a few chopped-veg bits resting inside it,
- *  always in the same canonical order — so the look depends only on WHICH veg
- *  are present, never the order added (mirrors composePizza). */
-function composePot(veg) {
+/** Pot-in-progress: the empty pot (`pot_B`) + a tinted BROTH surface + the
+ *  chopped veg resting in it, always in canonical order. The broth COLOUR (per
+ *  recipe) is what distinguishes a half-filled pot — carrot–potato reads orange,
+ *  onion–mushroom reads creamy — so "soup forming without the second veg" is
+ *  legible at a glance. Order-free, like composePizza. */
+function composePot(veg, broth) {
   const g = new THREE.Group();
-  const pot = getModel('pot_A');
+  const pot = getModel('pot_B');
   pot.scale.multiplyScalar(0.9);
   g.add(pot);
-  const m = measureModel('pot_A');
-  // drop the chopped bits just inside the rim, spread around the centre
-  const spots = { onion: [-0.18, 0.1], carrot: [0.2, 0.06], potato: [0, -0.2] };
+  const m = measureModel('pot_B');
+  const r = m.radius || 0.5;
+  // broth disc sitting just below the rim, tinted to the recipe
+  if (broth) {
+    const disc = new THREE.Mesh(
+      new THREE.CylinderGeometry(r * 0.74, r * 0.7, 0.05, 22),
+      new THREE.MeshStandardMaterial({ color: broth, roughness: 0.5 }),
+    );
+    disc.position.y = m.height * 0.6;
+    g.add(disc);
+  }
+  // chopped bits floating in the broth, spread around the centre
+  const spots = { carrot: [0.2, 0.06], potato: [0, -0.2], onion: [-0.18, 0.1], mushroom: [0.16, -0.14] };
   for (const t of POT_LAYERS) {
     if (!veg.includes(t)) continue;
     const bit = getModel(POT_VEG_MODELS[t]);
-    bit.scale.setScalar(0.6);
-    const [sx, sz] = spots[t];
-    bit.position.set(sx * (m.radius || 0.5), m.height * 0.62, sz * (m.radius || 0.5));
+    bit.scale.setScalar(0.55);
+    const [sx, sz] = spots[t] || [0, 0];
+    bit.position.set(sx * r, m.height * 0.63, sz * r);
     bit.rotation.y = (sx * 9 + sz * 11) % (Math.PI * 2);
     g.add(bit);
   }
@@ -118,7 +141,7 @@ function ingredientMesh(id) {
   const def = ITEMS[id];
   if (def.compose === 'pizza') return composePizza(def.toppings);
   if (def.compose === 'burger') return composeBurger(def.expandsTo, !!def.dish, 0);
-  if (def.compose === 'pot') return composePot(def.veg);
+  if (def.compose === 'pot') return composePot(def.veg, def.broth);
   const m = getModel(def.model, def.tint || null);
   if (def.scale) m.scale.multiplyScalar(def.scale);
   return m;
@@ -141,14 +164,24 @@ export function buildItemMesh(item) {
     g.add(m);
     return g;
   }
-  // plate
-  const plate = getModel(item.dirty ? 'plate_dirty' : 'plate');
+  // plate / bowl (the serving vessel is per-level)
+  const isBowl = VESSEL === 'bowl';
+  if (item.dirty) { g.add(getModel(vesselModel(true))); return g; }
+  // A filled SOUP bowl: the `food_stew` dish model IS already a bowl of soup, so
+  // it REPLACES the empty bowl (no nesting) and carries the recipe tint.
+  if (isBowl && item.dish && DISHES[item.dish].model) {
+    const d = DISHES[item.dish];
+    const dm = getModel(d.model, d.model_tint || null);
+    dm.scale.setScalar(0.9);
+    g.add(dm);
+    return g;
+  }
+  const plate = getModel(vesselModel(false));
   g.add(plate);
-  if (item.dirty) return g;
   const PLATE_TOP = 0.08;
   if (item.dish && DISHES[item.dish].model) {
     // baked pizzas keep the finished plated model (small — see PIZZA_SCALE)
-    const dm = getModel(DISHES[item.dish].model);
+    const dm = getModel(DISHES[item.dish].model, DISHES[item.dish].model_tint || null);
     dm.scale.setScalar(0.66);
     dm.position.y = PLATE_TOP;
     g.add(dm);
@@ -257,22 +290,33 @@ export class Station {
   refreshStack() {
     if (this.stackGroup) this.holder.remove(this.stackGroup);
     this.stackGroup = new THREE.Group();
+    const isBowl = VESSEL === 'bowl';
     if (this.type === 'rack') {
-      // plates stand upright, side by side in the rack slots (0–4 visible)
       const n = Math.min(this.plates, 4);
-      for (let i = 0; i < n; i++) {
-        const p = getModel('plate');
-        // on edge, face along the row (disc normal = x), all leaning the same way
-        p.rotation.z = Math.PI / 2 - 0.12;
-        p.position.set(-0.36 + i * 0.24, 0.42, 0);
-        this.stackGroup.add(p);
+      if (isBowl) {
+        // clean bowls just nest in a stack where the dish rack used to be
+        for (let i = 0; i < n; i++) {
+          const b = getModel('bowl');
+          b.position.set(0, 0.04 + i * 0.12, 0);
+          this.stackGroup.add(b);
+        }
+      } else {
+        // plates stand upright, side by side in the rack slots (0–4 visible)
+        for (let i = 0; i < n; i++) {
+          const p = getModel('plate');
+          // on edge, face along the row (disc normal = x), all leaning the same way
+          p.rotation.z = Math.PI / 2 - 0.12;
+          p.position.set(-0.36 + i * 0.24, 0.42, 0);
+          this.stackGroup.add(p);
+        }
+        this.stackGroup.rotation.y = (this.rot || 0) + Math.PI / 2;  // match the turned rack
       }
-      this.stackGroup.rotation.y = (this.rot || 0) + Math.PI / 2;  // match the turned rack
     } else {
-      // dirty pile at the sink stays a (small) stack
+      // dirty pile at the sink: bowls nest on the RIGHT, plates pile at the back
       for (let i = 0; i < Math.min(this.dirtyPlates, 4); i++) {
-        const p = getModel('plate_dirty');
-        p.position.set(0.45, 0.02 + i * 0.14, -0.3);
+        const p = getModel(isBowl ? 'bowl_dirty' : 'plate_dirty');
+        if (isBowl) p.position.set(0.5, 0.04 + i * 0.12, 0.2);
+        else p.position.set(0.45, 0.02 + i * 0.14, -0.3);
         p.rotation.y = i * 0.5;
         this.stackGroup.add(p);
       }

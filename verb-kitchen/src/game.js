@@ -1,12 +1,12 @@
 // Core game orchestrator: scene, loop, interactions, scoring, round flow.
 import * as THREE from 'three';
 import { TILE, preloadRestaurant, charUnlocked, loadChefAssets } from './models.js';
-import { ITEMS, DISHES, matchDish, canPlate, combine, itemModelNames } from './recipes.js';
+import { ITEMS, DISHES, matchDish, canPlate, combine, itemModelNames, isPotItem, potRecipeHint } from './recipes.js';
 import { LEVELS, levelModelNames } from './levels.js';
 import { World } from './world.js';
 import { Chef, preloadChef } from './chef.js';
 import { Helper } from './helper.js';
-import { makeIngredient, makePlate, buildItemMesh, drawRing } from './stations.js';
+import { makeIngredient, makePlate, buildItemMesh, drawRing, setVessel } from './stations.js';
 import { Orders } from './orders.js';
 import { SinkQuiz } from './sink.js';
 import { FX } from './fx.js';
@@ -79,6 +79,7 @@ export class Game {
     this.scene.background = new THREE.Color(0x0c1430);
     this.scene.fog = new THREE.Fog(0x0c1430, 40, 80);
 
+    setVessel(this.level.vessel || 'plate');   // soup serves in bowls, not plates
     this.world = new World(this.level);
     this.scene.add(this.world.group);
 
@@ -336,6 +337,11 @@ export class Game {
       }
       case 'stove':
       case 'oven': {
+        // SOUP: a pot lives permanently on the stove. Tip chopped veg in (it
+        // auto-boils when a recipe is complete), then scoop the soup into a bowl.
+        if (st.type === 'stove' && st.item && st.item.type === 'ing' && isPotItem(st.item.id)) {
+          this.potStoveInteract(st, held); break;
+        }
         const wantsBake = st.type === 'oven';
         // 1) put a raw item on to cook / bake
         if (held && held.type === 'ing' && !st.item) {
@@ -489,6 +495,41 @@ export class Game {
     if (wasBurnt) this.stopSmoke(st);
     this.updateSizzle();
     if (plate.dish) { audio.ding(); this.fx.sparkle(st.pos.clone().setY(st.topY + 0.5)); }
+  }
+
+  /** Stove-pot interaction (soup): add a chopped veg, or scoop the boiled soup
+   *  into a bowl. The pot is a permanent stove fixture — it can't be picked up;
+   *  it empties (→ pot_empty) when scooped and is reused in place. */
+  potStoveInteract(st, held) {
+    const def = ITEMS[st.item.id];
+    // cooked soup ready in the pot → scoop into an empty clean bowl
+    if (def.scoop) {
+      if (held && held.type === 'plate' && !held.dirty && held.contents.length === 0) {
+        this.plateAdd(held, def.scoop);          // the bowl now holds the finished soup
+        held.steam = 14;
+        this.chef.setCarried(held, buildItemMesh(held));
+        st.clearCooking();
+        st.setItem(makeIngredient('pot_empty'), false);   // pot stays, empty, reusable
+        this.updateSizzle();
+        if (held.dish) { audio.ding(); this.fx.sparkle(st.pos.clone().setY(st.topY + 0.5)); }
+      } else { this.reject(st); this.fx.bubble(st.pos.clone().setY(st.topY + 1.15), [modelIcon('bowl')]); }
+      return;
+    }
+    // still cooking — hands off
+    if (st.state === 'cooking') { this.reject(st); return; }
+    // tip a chopped veg into the pot (combine); a complete recipe auto-boils
+    if (held && held.type === 'ing') {
+      const result = combine(st.item.id, held.id);
+      if (result) {
+        st.setItem(makeIngredient(result), true);
+        this.chef.setCarried(null);
+        this.fx.sparkle(st.pos.clone().setY(st.topY + 0.5));
+        audio.putdown();
+        if (ITEMS[result].cookTo) { st.state = 'cooking'; st.cookT = 0; st.burnT = 0; audio.sizzle(true); }
+        return;
+      }
+    }
+    this.reject(st);
   }
 
   // ---------- Space: work station ----------
@@ -658,7 +699,15 @@ export class Game {
       else if (st.type === 'stove' || st.type === 'oven') {
         const emptyPlate = held && held.type === 'plate' && !held.dirty && held.contents.length === 0;
         const heldDef = held && held.type === 'ing' ? ITEMS[held.id] : null;
-        if (st.state === 'ready') {
+        const potOnStove = st.type === 'stove' && st.item && st.item.type === 'ing' && isPotItem(st.item.id);
+        if (potOnStove) {
+          const pdef = ITEMS[st.item.id];
+          if (pdef.scoop) text = st.state === 'cooking' ? 'boiling…' : emptyPlate ? 'E — scoop the soup 🥣' : 'soup ready — bring a bowl 🥣';
+          else if (st.state === 'cooking') text = 'boiling…';
+          else if (held && held.type === 'ing' && combine(st.item.id, held.id)) text = 'E — add to the pot 🍲';
+          else text = potRecipeHint(pdef.veg || []);
+        }
+        else if (st.state === 'ready') {
           if (st.type === 'oven') text = emptyPlate ? 'E — plate the pizza!' : 'too hot! bring a clean plate 🍽️';
           else {
             const onBun = held && held.type === 'ing' && st.item && combine(held.id, st.item.id);
@@ -677,16 +726,6 @@ export class Game {
           if (!have.includes('sauce')) need.push('🥫');
           if (!have.includes('cheese')) need.push('🧀');
           text = `add ${need.join(' + ')} first 🍕`;
-        }
-        // an incomplete pot still missing a vegetable can't boil yet
-        else if (heldDef && st.type === 'stove' && !heldDef.cookTo &&
-                 (heldDef.compose === 'pot' || held.id === 'pot_empty')) {
-          const have = heldDef.veg || [];
-          const need = [];
-          if (!have.includes('onion')) need.push('🧅');
-          if (!have.includes('carrot')) need.push('🥕');
-          if (!have.includes('potato')) need.push('🥔');
-          text = `add ${need.join(' + ')} first 🍲`;
         }
         else if (held) text = 'E — start cooking';
       }

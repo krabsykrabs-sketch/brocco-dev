@@ -200,40 +200,40 @@ export const LEVELS = [
     },
   },
   {
-    // Level 6 "Soup Kitchen" — a vegetable-soup level. Single player. Mirrors
-    // the Burger Bar ASCII structure. The cooking is the PIZZA pattern themed as
-    // a pot-on-the-stove boil: grab an empty pot (crate 4), chop onion / carrot /
-    // potato (the ONE new ingredient is onion), add all three to the pot in any
-    // order (compositional `accepts`, like pizza toppings), boil the full pot on
-    // a STOVE (cookTo → `soup`), plate the soup and serve. Over-boil burns it
-    // (burnTo) like a patty. Served on the normal plate → dirty plate → sink →
-    // verb quiz (grammar loop reused unchanged).
+    // Level 6 "Soup Kitchen" — a vegetable-soup level (editor JSON layout,
+    // levels/soup6.json). Single player, served in BOWLS not plates. TWO empty
+    // pots sit on the two stoves at the start (Overcooked-style fixtures): chop a
+    // veg and tip it STRAIGHT into a stove-pot (E) — the broth shows the soup
+    // forming, coloured by recipe even with just one veg in. Two recipes share
+    // four veg: carrot + potato (orange soup) and onion + mushroom (creamy). A
+    // complete pot auto-boils, then you scoop the soup into a clean BOWL (the pot
+    // stays, empty, reusable), serve at the hatch → dirty bowl → sink → verb quiz
+    // (grammar loop reused unchanged). Clean bowls stack where the dish rack was;
+    // dirty bowls land on the right of the sink.
     id: 'soup',
     num: 6,
     open: true,                  // selectable for playtest
     name: 'Soup Kitchen',
     emoji: '🍲',
-    style: 'B',                  // style-B kitchen for visual variety (like Pizza)
-    bareStoves: true,            // no decorative pans — you set your own POT on the hob
-    map: [
-      'CHHCCkrC',
-      '1......s',
-      '2.bb...s',
-      '3..P..tC',
-      '4.....CC',
-      'CCCCCCCC',
+    style: 'B',
+    jsonUrl: 'levels/soup6.json',
+    vessel: 'bowl',              // serve in bowls, not plates (see stations.setVessel)
+    spawn: { col: 4, row: 4 },   // chef start in JSON cell coords
+    // two empty pots pre-placed on the two stoves (JSON cell coords)
+    startItems: [
+      { c: 5, r: 1, item: 'pot_empty' },
+      { c: 6, r: 1, item: 'pot_empty' },
     ],
-    crates: { 1: 'onion', 2: 'carrot', 3: 'potato', 4: 'pot_empty' },
-    // 5 bowls of soup; mix lets the player batch chops. 5 orders · 2 plates → 3
-    // washes (matches Burger Bar's grammar load).
-    orders: ['garden_soup', 'garden_soup', 'garden_soup', 'garden_soup', 'garden_soup'],
+    // a mix of the two recipes; lets the player batch chops. 6 orders · 2 bowls
+    // → washing stays load-bearing.
+    orders: ['carrot_potato_soup', 'onion_mushroom_soup', 'carrot_potato_soup', 'onion_mushroom_soup', 'carrot_potato_soup', 'onion_mushroom_soup'],
     spawnEvery: [7, 11],
-    plates: 2,
-    starTimes: [300, 235, 185, 145],   // 1★ / 2★ / 3★(gold) / author — placeholders
+    plates: 2,                   // 2 clean bowls to start
+    starTimes: [320, 250, 195, 150],   // 1★ / 2★ / 3★(gold) / author — placeholders
     tutorial: {
       image: 'assets/ChatGPT/Salad.png',
       title: 'Soup Kitchen',
-      text: 'Grab a pot, chop the onion, carrot and potato and tip each into the pot (E), set the full pot on a stove to boil, then plate the soup and serve!',
+      text: 'Two pots wait on the stoves! Grab a veg and drop it into a pot (E) — carrot + potato makes one soup, onion + mushroom another. When it boils, scoop it into a bowl and serve!',
     },
   },
   {

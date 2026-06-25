@@ -120,16 +120,13 @@ export class UI {
       opt.value = c.id; opt.textContent = c.name;
       sel.appendChild(opt);
     }
-    sel.onchange = () => this._loadCatalog(sel.value, true);
+    sel.onchange = () => this._loadCatalog(sel.value);
   }
 
-  async _loadCatalog(id, confirmClear) {
+  // Switch the ACTIVE pack (what new placements use). Packs combine — switching
+  // keeps everything already placed, so a level can mix objects from several.
+  async _loadCatalog(id) {
     const entry = CATALOGS.find((c) => c.id === id) || CATALOGS[0];
-    if (confirmClear && this.editor.state.objects.length &&
-        !confirm('Switching catalog clears the current level. Continue?')) {
-      $('catalogSelect').value = this.editor.state.catalogId;
-      return;
-    }
     this._setSave('Loading catalog…');
     let manifest;
     try { manifest = await loadManifest(entry); }
@@ -269,7 +266,7 @@ export class UI {
     const restore = opts.restore !== false;
     const restored = storage.loadAuto();
     const startId = (restored && restored.catalog) || CATALOGS[0].id;
-    await this._loadCatalog(startId, false);
+    await this._loadCatalog(startId);
 
     if (restore && restored && restored.objects && restored.objects.length &&
         confirm(`Restore your last level (${restored.objects.length} objects)?`)) {

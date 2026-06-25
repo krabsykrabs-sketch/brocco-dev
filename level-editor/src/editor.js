@@ -25,6 +25,7 @@
 import * as THREE from 'three';
 import { OrbitController } from './controls.js';
 import { AssetPack } from './models.js';
+import { CATALOGS, loadManifest } from './catalog.js';
 
 export const TILE = 2;   // KayKit pieces are 2×2 world units
 
@@ -71,8 +72,13 @@ export class Editor {
     this.onRotation = null;   // (quarterTurns 0..3)
     this.onGrid = null;       // (cols, rows)
 
+    // `catalogId` is the DEFAULT pack for untagged objects (the first pack
+    // loaded this session). A level can mix packs: each object carries its own
+    // `pack` and only objects matching the default omit it on export.
     this.state = { catalogId: null, cols: 12, rows: 12, tile: TILE, objects: [] };
-    this.pack = null;
+    this.packs = new Map();        // catalogId -> AssetPack (several can be loaded)
+    this.pack = null;              // the ACTIVE pack (what new placements use)
+    this.activeCatalogId = null;
 
     this.tool = 'select';     // 'select' | 'erase'
     this.placeModel = null;   // model name in place mode, or null
@@ -234,12 +240,32 @@ export class Editor {
   }
 
   // ---- catalog ----
+  /** Make `manifest`'s pack the ACTIVE one (what new placements use). Loads it
+   *  once and keeps it alongside any other loaded packs — switching the active
+   *  pack does NOT clear the level, so you can combine objects from several. */
   async setCatalog(manifest) {
-    this.pack = new AssetPack(manifest);
-    this.state.catalogId = manifest.id;
-    this._clearObjects();
+    let pack = this.packs.get(manifest.id);
+    if (!pack) { pack = new AssetPack(manifest); this.packs.set(manifest.id, pack); }
+    this.pack = pack;
+    this.activeCatalogId = manifest.id;
+    if (!this.state.catalogId) this.state.catalogId = manifest.id;   // default for untagged objects
     this.clearPlaceMode();
     this.select(null);
+  }
+
+  /** The AssetPack a placed object renders from (its own pack, or the active). */
+  _packFor(rec) { return this.packs.get(rec.pack) || this.pack; }
+
+  /** Load (once) the AssetPack for a catalog id — used when importing a level
+   *  that references packs not yet loaded. */
+  async _ensurePack(catalogId) {
+    if (this.packs.has(catalogId)) return this.packs.get(catalogId);
+    const entry = CATALOGS.find((c) => c.id === catalogId);
+    if (!entry) throw new Error('Unknown catalog: ' + catalogId);
+    const manifest = await loadManifest(entry);
+    const pack = new AssetPack(manifest);
+    this.packs.set(catalogId, pack);
+    return pack;
   }
 
   // ---- placement ----
@@ -303,7 +329,7 @@ export class Editor {
     const tops = new Map();
     const key = (c, r) => c + ',' + r;
     for (const o of this.state.objects) {
-      const m = this.pack.measure(o.model);
+      const m = this._packFor(o).measure(o.model);
       const ground = this.isGround(o.model);
       const w = o.w || 1, d = o.d || 1;
       let base = 0;
@@ -336,7 +362,7 @@ export class Editor {
   _positionNode(rec) {
     const node = rec.node;
     if (!node) return;
-    const m = this.pack.measure(rec.model);
+    const m = this._packFor(rec).measure(rec.model);
     const p = this.blockCenter(rec.col, rec.row, rec.w || 1, rec.d || 1);
     const y = this.isGround(rec.model) ? rec.y : rec.y - m.minY;
     const pl = this.placeOffset(rec.model, rec.rot);   // intrinsic, rotates with piece
@@ -345,7 +371,8 @@ export class Editor {
   }
 
   _addNode(rec) {
-    const node = this.pack.instance(rec.model);
+    const node = this._packFor(rec).instance(rec.model);
+    if (!node) return;     // template not loaded for this object's pack
     node.userData.objId = rec.id;
     node.traverse((o) => { o.userData.objId = rec.id; });
     rec.node = node;
@@ -372,7 +399,7 @@ export class Editor {
     const fp = this.footprint(name);
     const a = this.blockAnchor(this._hoverPoint.x, this._hoverPoint.z, fp.w, fp.d);
     if (!a) return;
-    const rec = { id: ++this._idc, model: name, col: a.col, row: a.row, rot: this.rotation, rotX: 0, rotZ: 0, w: fp.w, d: fp.d, y: 0, off: { x: 0, y: 0, z: 0 } };
+    const rec = { id: ++this._idc, model: name, pack: this.activeCatalogId, col: a.col, row: a.row, rot: this.rotation, rotX: 0, rotZ: 0, w: fp.w, d: fp.d, y: 0, off: { x: 0, y: 0, z: 0 } };
     this.state.objects.push(rec);
     this._addNode(rec);
     this._restackAll();
@@ -630,6 +657,7 @@ export class Editor {
   newLevel() {
     this._clearObjects();
     this.clearPlaceMode();
+    this.state.catalogId = this.activeCatalogId;   // fresh level defaults to the active pack
     this._changed();
   }
 
@@ -642,6 +670,9 @@ export class Editor {
       grid: { cols: this.state.cols, rows: this.state.rows, tile: TILE },
       objects: this.state.objects.map((o) => {
         const r = { model: o.model, col: o.col, row: o.row, rot: o.rot };
+        // tag the source pack only when it differs from the level default,
+        // so single-pack levels (e.g. the kitchen's) stay byte-identical
+        if (o.pack && o.pack !== this.state.catalogId) r.pack = o.pack;
         if (o.rotX) r.rotX = o.rotX;
         if (o.rotZ) r.rotZ = o.rotZ;
         if (o.off && (o.off.x || o.off.y || o.off.z)) r.off = { x: o.off.x, y: o.off.y, z: o.off.z };
@@ -658,17 +689,36 @@ export class Editor {
     this.state.rows = data.grid.rows || 12;
     this._buildGrid();
 
-    const names = [...new Set(data.objects.map((o) => o.model))];
-    await Promise.all(names.map((n) => this.pack.ensure(n).catch(() => null)));
+    // the level's default pack + every per-object pack it references
+    const defaultCat = data.catalog || this.activeCatalogId || (CATALOGS[0] && CATALOGS[0].id);
+    const packIds = [...new Set([defaultCat, ...data.objects.map((o) => o.pack).filter(Boolean)])];
+    const loaded = new Map();
+    for (const id of packIds) {
+      try { loaded.set(id, await this._ensurePack(id)); } catch (e) { console.warn('[world-designer]', e.message); }
+    }
+    if (loaded.has(defaultCat)) { this.state.catalogId = defaultCat; this.pack = loaded.get(defaultCat); this.activeCatalogId = defaultCat; }
+
+    // load each referenced model from its OWN pack
+    const wanted = {};   // packId -> Set(model)
+    for (const o of data.objects) {
+      const pid = o.pack || defaultCat;
+      (wanted[pid] = wanted[pid] || new Set()).add(o.model);
+    }
+    await Promise.all(Object.entries(wanted).flatMap(([pid, set]) => {
+      const pk = loaded.get(pid); if (!pk) return [];
+      return [...set].map((n) => pk.ensure(n).catch(() => null));
+    }));
 
     for (const o of data.objects) {
       if (typeof o.col !== 'number' || typeof o.row !== 'number') continue;
-      if (!this.pack.templates.has(o.model)) continue;   // skip unknown models
+      const pid = o.pack || defaultCat;
+      const pk = loaded.get(pid);
+      if (!pk || !pk.templates.has(o.model)) continue;   // skip unknown / unloadable models
       const fp = this.footprint(o.model);
       const off = (o.off && typeof o.off === 'object')
         ? { x: +o.off.x || 0, y: +o.off.y || 0, z: +o.off.z || 0 }
         : { x: 0, y: 0, z: 0 };
-      const rec = { id: ++this._idc, model: o.model, col: o.col, row: o.row, rot: o.rot || 0,
+      const rec = { id: ++this._idc, model: o.model, pack: pid, col: o.col, row: o.row, rot: o.rot || 0,
         rotX: +o.rotX || 0, rotZ: +o.rotZ || 0, w: fp.w, d: fp.d, y: 0, off };
       this.state.objects.push(rec);
       this._addNode(rec);

@@ -8,6 +8,7 @@
 // build script to emit catalogs/<id>.json, then add an entry here.
 export const CATALOGS = [
   { id: 'restaurant-bits', name: 'Restaurant Bits 1.0 EXTRA', manifest: 'catalogs/restaurant-bits.json' },
+  { id: 'furniture-bits', name: 'Furniture Bits 1.0 (interiors)', manifest: 'catalogs/furniture-bits.json' },
 ];
 
 export async function loadManifest(entry) {

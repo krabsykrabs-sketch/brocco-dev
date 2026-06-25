@@ -63,6 +63,8 @@ export class AssetPack {
       height: Math.max(0.001, box.max.y - box.min.y),
       minY: box.min.y,
       radius: Math.max(box.max.x - box.min.x, box.max.z - box.min.z) / 2,
+      sizeX: box.max.x - box.min.x,
+      sizeZ: box.max.z - box.min.z,
     };
     this.boxes.set(name, m);
     return m;

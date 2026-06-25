@@ -32,6 +32,10 @@ export const TILE = 2;   // KayKit pieces are 2×2 world units
 const ZERO = { x: 0, y: 0, z: 0 };
 // the whole wall/door/window kit shares one off-grid origin → same default nudge
 const WALL_PLACE = { x: -1, y: 0, z: -0.5 };
+// packs whose footprints come ONLY from the hand-authored MODEL_META below
+// (their game loader is frozen and must agree with the editor). All other packs
+// derive footprints from the measured model size — see Editor.footprint().
+const LEGACY_FOOTPRINT_PACKS = new Set(['restaurant-bits']);
 
 const MODEL_META = {
   floor_kitchen:              { w: 2, d: 2, ground: true },
@@ -98,8 +102,24 @@ export class Editor {
   }
 
   meta(name) { return Object.assign({ w: 1, d: 1, ground: false, place: null }, MODEL_META[name]); }
-  footprint(name) { const m = this.meta(name); return { w: m.w, d: m.d }; }
   isGround(name) { return !!this.meta(name).ground; }
+
+  /** A model's cell footprint. `restaurant-bits` uses the hand-authored
+   *  MODEL_META (so the editor stays in lockstep with the kitchen game's loader,
+   *  which only treats the big floors as 2×2). Other packs have no frozen loader,
+   *  so we DERIVE the footprint from the measured size — a piece ~4 world units
+   *  wide (2 cells) snaps to a 2-cell block instead of overhanging one tile. */
+  footprint(name, packId) {
+    const explicit = MODEL_META[name];
+    if (explicit && (explicit.w || explicit.d)) return { w: explicit.w || 1, d: explicit.d || 1 };
+    const pid = packId || this.activeCatalogId;
+    const pk = this.packs.get(pid);
+    if (pk && !LEGACY_FOOTPRINT_PACKS.has(pid) && pk.templates.has(name)) {
+      const m = pk.measure(name);
+      return { w: Math.max(1, Math.round(m.sizeX / TILE)), d: Math.max(1, Math.round(m.sizeZ / TILE)) };
+    }
+    return { w: 1, d: 1 };
+  }
 
   /** Built-in placement offset for a model, rotated into world space by rot. */
   placeOffset(name, rot) {
@@ -396,7 +416,7 @@ export class Editor {
   _place() {
     const name = this.placeModel;
     if (!name || !this._hoverPoint) return;
-    const fp = this.footprint(name);
+    const fp = this.footprint(name, this.activeCatalogId);
     const a = this.blockAnchor(this._hoverPoint.x, this._hoverPoint.z, fp.w, fp.d);
     if (!a) return;
     const rec = { id: ++this._idc, model: name, pack: this.activeCatalogId, col: a.col, row: a.row, rot: this.rotation, rotX: 0, rotZ: 0, w: fp.w, d: fp.d, y: 0, off: { x: 0, y: 0, z: 0 } };
@@ -545,7 +565,7 @@ export class Editor {
 
   /** Refresh hover highlight (footprint-aware) + ghost. */
   _updateHover() {
-    const fp = this.placeModel ? this.footprint(this.placeModel) : { w: 1, d: 1 };
+    const fp = this.placeModel ? this.footprint(this.placeModel, this.activeCatalogId) : { w: 1, d: 1 };
     let target = null;
     if (this._hoverPoint) {
       const a = this.blockAnchor(this._hoverPoint.x, this._hoverPoint.z, fp.w, fp.d);
@@ -714,7 +734,7 @@ export class Editor {
       const pid = o.pack || defaultCat;
       const pk = loaded.get(pid);
       if (!pk || !pk.templates.has(o.model)) continue;   // skip unknown / unloadable models
-      const fp = this.footprint(o.model);
+      const fp = this.footprint(o.model, pid);
       const off = (o.off && typeof o.off === 'object')
         ? { x: +o.off.x || 0, y: +o.off.y || 0, z: +o.off.z || 0 }
         : { x: 0, y: 0, z: 0 };

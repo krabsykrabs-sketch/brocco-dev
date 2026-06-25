@@ -9,6 +9,7 @@
 export const CATALOGS = [
   { id: 'restaurant-bits', name: 'Restaurant Bits 1.0 EXTRA', manifest: 'catalogs/restaurant-bits.json' },
   { id: 'furniture-bits', name: 'Furniture Bits 1.0 (interiors)', manifest: 'catalogs/furniture-bits.json' },
+  { id: 'prototype-bits', name: 'Prototype Bits 1.1 (greybox)', manifest: 'catalogs/prototype-bits.json' },
 ];
 
 export async function loadManifest(entry) {

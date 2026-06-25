@@ -1,0 +1,125 @@
+{
+  "id": "prototype-bits",
+  "name": "Prototype Bits 1.1 EXTRA",
+  "format": "gltf",
+  "basePath": "assets/prototype-bits/",
+  "atlas": "prototypebits_texture.png",
+  "count": 85,
+  "categories": [
+    {
+      "id": "primitives",
+      "name": "Primitives (greybox)",
+      "models": [
+        "Cube_Prototype_Large_A",
+        "Cube_Prototype_Large_B",
+        "Cube_Prototype_Small",
+        "Floor_Prototype",
+        "Primitive_Beam",
+        "Primitive_Cube",
+        "Primitive_Cube_Small",
+        "Primitive_Doorway",
+        "Primitive_Floor",
+        "Primitive_Floor_Hole",
+        "Primitive_Pillar",
+        "Primitive_Slope",
+        "Primitive_Slope_Half",
+        "Primitive_Slope_Half_InnerCorner",
+        "Primitive_Slope_Half_OuterCorner",
+        "Primitive_Slope_InnerCorner",
+        "Primitive_Slope_OuterCorner",
+        "Primitive_Stairs",
+        "Primitive_Stairs_Half",
+        "Primitive_Wall",
+        "Primitive_Wall_Half",
+        "Primitive_Wall_OpenCorner",
+        "Primitive_Wall_Short",
+        "Primitive_Wall_Slope",
+        "Primitive_Window"
+      ]
+    },
+    {
+      "id": "architecture",
+      "name": "Walls, Doors & Floors",
+      "models": [
+        "Door_A",
+        "Door_A_Decorated",
+        "Door_B",
+        "Floor",
+        "Floor_Dirt",
+        "Pillar_A",
+        "Pillar_B",
+        "Wall",
+        "Wall_Decorated",
+        "Wall_Doorway",
+        "Wall_Half",
+        "Wall_Target",
+        "Wall_Window_Closed",
+        "Wall_Window_Open"
+      ]
+    },
+    {
+      "id": "props",
+      "name": "Props & Containers",
+      "models": [
+        "Barrel_A",
+        "Barrel_B",
+        "Barrel_C",
+        "Box_A",
+        "Box_B",
+        "Box_C",
+        "Can_A",
+        "Can_B",
+        "Coin_A",
+        "Coin_B",
+        "Coin_C",
+        "Dummy_Base",
+        "Locker",
+        "Locker_Decorated",
+        "Pallet_Large",
+        "Pallet_Small",
+        "Pallet_Small_Decorated_A",
+        "Pallet_Small_Decorated_B",
+        "Weaponrack",
+        "Weaponrack_Decorated",
+        "Workbench",
+        "Workbench_Decorated",
+        "table_medium",
+        "table_medium_Decorated",
+        "table_medium_long"
+      ]
+    },
+    {
+      "id": "targets",
+      "name": "Targets",
+      "models": [
+        "target",
+        "target_pieces_A",
+        "target_pieces_B",
+        "target_pieces_C",
+        "target_pieces_D",
+        "target_pieces_E",
+        "target_pieces_F",
+        "target_small",
+        "target_stand_A",
+        "target_stand_A_Decorated",
+        "target_stand_B",
+        "target_wall_large_A",
+        "target_wall_large_B",
+        "target_wall_small"
+      ]
+    },
+    {
+      "id": "weapons",
+      "name": "Weapons & Ammo",
+      "models": [
+        "Ammo_Box",
+        "Ammo_Magazine",
+        "Bat",
+        "Bullet",
+        "Gun_Pistol",
+        "Gun_Rifle",
+        "Gun_Sniper"
+      ]
+    }
+  ]
+}

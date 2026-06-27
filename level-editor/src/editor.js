@@ -61,7 +61,35 @@ const MODEL_META = {
   wall_window_closed_curtains_green: { place: WALL_PLACE },
   wall_orderwindow:                  { place: WALL_PLACE },
   wall_orderwindow_decorated:        { place: WALL_PLACE },
+  // (door entries live below alongside the prototype block; see DOOR_MODELS)
+  // --- prototype-bits walls: geometrically identical to the restaurant walls
+  // (x[-2,2], thin in z), so the SAME WALL_PLACE offset aligns them, and the
+  // place-offset makes them 1×1 (see footprint()) instead of auto-deriving 2×2.
+  Wall:               { place: WALL_PLACE },
+  Wall_Half:          { place: WALL_PLACE },
+  Wall_Doorway:       { place: WALL_PLACE },
+  Wall_Window_Open:   { place: WALL_PLACE },
+  Wall_Window_Closed: { place: WALL_PLACE },
+  Wall_Decorated:     { place: WALL_PLACE },
+  Wall_Target:        { place: WALL_PLACE },
+  // prototype doors — same wall-plane offset as the doorway so a door seats into
+  // a Wall_Doorway (restaurant door_A/door_B already carry WALL_PLACE above).
+  Door_A:             { place: WALL_PLACE },
+  Door_B:             { place: WALL_PLACE },
+  Door_A_Decorated:   { place: WALL_PLACE },
+  // --- prototype-bits floors: laid flush (top at the surface, slab recessed),
+  // harmonised with the restaurant floors. Footprint still auto-derives (Floor
+  // is 4×4 units = 2×2 cells).
+  Floor:            { ground: true },
+  Floor_Dirt:       { ground: true },
+  Floor_Prototype:  { ground: true },
+  Primitive_Floor:  { ground: true },
 };
+
+// Door leaves snap into a placed doorway (same cell + matching rotation) when
+// you hover near one. Both packs.
+const DOOR_MODELS = new Set(['door_A', 'door_B', 'Door_A', 'Door_B', 'Door_A_Decorated']);
+const DOORWAY_MODELS = new Set(['wall_doorway', 'Wall_Doorway']);
 
 export class Editor {
   constructor(container) {
@@ -112,6 +140,9 @@ export class Editor {
   footprint(name, packId) {
     const explicit = MODEL_META[name];
     if (explicit && (explicit.w || explicit.d)) return { w: explicit.w || 1, d: explicit.d || 1 };
+    // wall/door-kit pieces (those with a built-in `place` offset) are always 1×1
+    // — the offset seats the wide mesh on one cell's edge — so don't auto-derive.
+    if (explicit && explicit.place) return { w: 1, d: 1 };
     const pid = packId || this.activeCatalogId;
     const pk = this.packs.get(pid);
     if (pk && !LEGACY_FOOTPRINT_PACKS.has(pid) && pk.templates.has(name)) {
@@ -384,7 +415,10 @@ export class Editor {
     if (!node) return;
     const m = this._packFor(rec).measure(rec.model);
     const p = this.blockCenter(rec.col, rec.row, rec.w || 1, rec.d || 1);
-    const y = this.isGround(rec.model) ? rec.y : rec.y - m.minY;
+    // ground pieces sit with their TOP at the surface (slab recessed below) —
+    // `- maxY` harmonises floors whose origin is at the bottom (prototype) with
+    // those whose origin is at the top (restaurant, maxY = 0 ⇒ unchanged).
+    const y = this.isGround(rec.model) ? rec.y - (m.minY + m.height) : rec.y - m.minY;
     const pl = this.placeOffset(rec.model, rec.rot);   // intrinsic, rotates with piece
     const o = rec.off || ZERO;                          // user's manual nudge (world)
     node.position.set(p.x + pl.x + o.x, y + pl.y + o.y, p.z + pl.z + o.z);
@@ -415,11 +449,10 @@ export class Editor {
 
   _place() {
     const name = this.placeModel;
-    if (!name || !this._hoverPoint) return;
-    const fp = this.footprint(name, this.activeCatalogId);
-    const a = this.blockAnchor(this._hoverPoint.x, this._hoverPoint.z, fp.w, fp.d);
-    if (!a) return;
-    const rec = { id: ++this._idc, model: name, pack: this.activeCatalogId, col: a.col, row: a.row, rot: this.rotation, rotX: 0, rotZ: 0, w: fp.w, d: fp.d, y: 0, off: { x: 0, y: 0, z: 0 } };
+    if (!name || !this._hoverTarget) return;
+    const t = this._hoverTarget;                                  // snapped to a doorway if applicable
+    const rot = (this._snapRot != null) ? this._snapRot : this.rotation;
+    const rec = { id: ++this._idc, model: name, pack: this.activeCatalogId, col: t.col, row: t.row, rot, rotX: 0, rotZ: 0, w: t.w, d: t.d, y: 0, off: { x: 0, y: 0, z: 0 } };
     this.state.objects.push(rec);
     this._addNode(rec);
     this._restackAll();
@@ -548,6 +581,7 @@ export class Editor {
     if (moved > 5) return;       // a drag, not a click
     this._setNdc(e);
     this._hoverPoint = this._raycastPoint();
+    this._updateHover();         // refresh target + door snap for the exact click point
     this._handleClick();
   }
 
@@ -563,13 +597,32 @@ export class Editor {
     this.select(this._pickObject());
   }
 
-  /** Refresh hover highlight (footprint-aware) + ghost. */
+  /** Nearest placed doorway within ~1 cell of a world point (for door snapping). */
+  _nearestDoorway(point) {
+    let best = null, bestD = 2.0;
+    for (const o of this.state.objects) {
+      if (!DOORWAY_MODELS.has(o.model)) continue;
+      const c = this.blockCenter(o.col, o.row, o.w || 1, o.d || 1);
+      const d = Math.hypot(point.x - c.x, point.z - c.z);
+      if (d < bestD) { bestD = d; best = o; }
+    }
+    return best;
+  }
+
   _updateHover() {
     const fp = this.placeModel ? this.footprint(this.placeModel, this.activeCatalogId) : { w: 1, d: 1 };
     let target = null;
+    this._snapRot = null;
     if (this._hoverPoint) {
-      const a = this.blockAnchor(this._hoverPoint.x, this._hoverPoint.z, fp.w, fp.d);
-      if (a) target = { col: a.col, row: a.row, w: fp.w, d: fp.d };
+      // a door being placed snaps into a nearby doorway: its cell + rotation
+      if (this.placeModel && DOOR_MODELS.has(this.placeModel)) {
+        const dw = this._nearestDoorway(this._hoverPoint);
+        if (dw) { target = { col: dw.col, row: dw.row, w: 1, d: 1 }; this._snapRot = dw.rot; }
+      }
+      if (!target) {
+        const a = this.blockAnchor(this._hoverPoint.x, this._hoverPoint.z, fp.w, fp.d);
+        if (a) target = { col: a.col, row: a.row, w: fp.w, d: fp.d };
+      }
     }
     this._hoverTarget = target;
 
@@ -593,10 +646,11 @@ export class Editor {
     const m = this.pack.measure(this.placeModel);
     const base = this._blockBase(t.col, t.row, t.w, t.d);
     const p = this.blockCenter(t.col, t.row, t.w, t.d);
-    const yb = this.isGround(this.placeModel) ? base : base - m.minY;
-    const pl = this.placeOffset(this.placeModel, this.rotation);
+    const yb = this.isGround(this.placeModel) ? base - (m.minY + m.height) : base - m.minY;
+    const rot = (this._snapRot != null) ? this._snapRot : this.rotation;   // door snaps to doorway rotation
+    const pl = this.placeOffset(this.placeModel, rot);
     this._ghost.position.set(p.x + pl.x, yb + pl.y, p.z + pl.z);
-    this._ghost.rotation.y = this.rotation * Math.PI / 2;
+    this._ghost.rotation.y = rot * Math.PI / 2;
     this._ghost.visible = true;
   }
 

@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "world-designer",
+      "runtimeExecutable": "wsl",
+      "runtimeArgs": ["-e", "bash", "-lc", "cd ~/krabsy-homepage/tools/world-designer && python3 serve.py 8044"],
+      "port": 8044,
+      "autoPort": false
+    }
+  ]
+}

@@ -13,10 +13,13 @@ export class UI {
     this.tilesByModel = new Map();   // model -> tile element
     this._saveTimer = null;
     this._toastTimer = null;
+    this.currentFile = null;         // {dir, name} of the open library room, or null
+    this._dirs = [];
 
     this._wireEditor();
     this._buildCatalogSelect();
     this._bindToolbar();
+    this._bindLibrary();
   }
 
   // ---- editor -> UI ----
@@ -233,6 +236,7 @@ export class UI {
     $('btnNew').onclick = () => {
       if (ed.state.objects.length && !confirm('Clear the level and start over?')) return;
       ed.newLevel();
+      this.currentFile = null; this._reflectCurrentFile();
       this.toast('New level');
     };
 
@@ -261,6 +265,101 @@ export class UI {
     };
   }
 
+  // ---- library (open/edit/save rooms straight to the repo's level files) ----
+  _bindLibrary() {
+    const panel = $('libraryPanel');
+    $('btnLibrary').onclick = () => { panel.hidden = !panel.hidden; if (!panel.hidden) this._refreshLibList(); };
+    document.addEventListener('pointerdown', (e) => {
+      if (panel.hidden) return;
+      if (panel.contains(e.target) || $('btnLibrary').contains(e.target)) return;
+      panel.hidden = true;
+    });
+    $('libDir').onchange = () => this._refreshLibList();
+    $('btnLibRefresh').onclick = () => this._refreshLibList();
+    $('btnSave').onclick = () => this._saveCurrent();
+    $('btnSaveAs').onclick = () => this._saveAs();
+  }
+
+  /** Detect the local levels API; show the Library UI + populate folders if present. */
+  async _initLibrary() {
+    let ok = false;
+    try { ok = await storage.apiAvailable(); } catch (_) {}
+    if (!ok) return;                       // static host → Export/Import only
+    $('libraryGrp').hidden = false;
+    try { this._dirs = await storage.listDirs(); } catch (_) { this._dirs = []; }
+    const sel = $('libDir'); sel.innerHTML = '';
+    for (const d of this._dirs) {
+      const o = document.createElement('option');
+      o.value = d.dir;
+      o.textContent = d.dir.replace(/^games\//, '').replace(/\/levels$/, '') + ` (${d.count})`;
+      sel.appendChild(o);
+    }
+    const def = this._dirs.find((d) => d.dir.includes('sim-tower')) || this._dirs[0];
+    if (def) sel.value = def.dir;
+  }
+
+  async _refreshLibList() {
+    const dir = $('libDir').value;
+    const list = $('libList');
+    if (!dir) { list.innerHTML = '<div class="empty">No levels folder</div>'; return; }
+    list.innerHTML = '<div class="empty">Loading…</div>';
+    let data;
+    try { data = await storage.listLevels(dir); }
+    catch (e) { list.innerHTML = '<div class="empty">Failed to load</div>'; return; }
+    list.innerHTML = '';
+    if (!data.files.length) { list.innerHTML = '<div class="empty">No rooms yet — build one, then Save As…</div>'; return; }
+    for (const f of data.files) {
+      const row = document.createElement('div');
+      row.className = 'librow';
+      if (this.currentFile && this.currentFile.dir === dir && this.currentFile.name === f.name) row.classList.add('cur');
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = f.name;
+      const ct = document.createElement('span'); ct.className = 'ct'; ct.textContent = f.objects + ' obj';
+      row.append(nm, ct);
+      row.onclick = () => this._openRoom(dir, f.name);
+      list.appendChild(row);
+    }
+  }
+
+  async _openRoom(dir, name) {
+    try {
+      const data = await storage.readLevel(dir, name);
+      await this.editor.loadState(data);
+      this.currentFile = { dir, name };
+      this._reflectCurrentFile();
+      $('libraryPanel').hidden = true;
+      this.toast('Opened ' + name);
+    } catch (e) { this.toast(e.message || 'Open failed'); console.error(e); }
+  }
+
+  _reflectCurrentFile() {
+    const c = this.currentFile;
+    $('btnSave').hidden = !c;
+    $('curFile').textContent = c ? c.name : '';
+  }
+
+  async _saveCurrent() {
+    if (!this.currentFile) return this._saveAs();
+    try {
+      await storage.writeLevel(this.currentFile.dir, this.currentFile.name, this.editor.getState());
+      this.toast('Saved ' + this.currentFile.name);
+    } catch (e) { this.toast(e.message || 'Save failed'); console.error(e); }
+  }
+
+  async _saveAs() {
+    const dir = $('libDir').value || (this._dirs[0] && this._dirs[0].dir);
+    if (!dir) { this.toast('No levels folder available'); return; }
+    let name = prompt('Save as — file name in ' + dir + ':', this.currentFile ? this.currentFile.name : 'room.json');
+    if (!name) return;
+    if (!name.endsWith('.json')) name += '.json';
+    try {
+      await storage.writeLevel(dir, name, this.editor.getState());
+      this.currentFile = { dir, name };
+      this._reflectCurrentFile();
+      this._refreshLibList();
+      this.toast('Saved ' + name);
+    } catch (e) { this.toast(e.message || 'Save failed'); console.error(e); }
+  }
+
   // ---- boot ----
   async start(opts = {}) {
     const restore = opts.restore !== false;
@@ -274,5 +373,6 @@ export class UI {
       catch (e) { console.error(e); }
     }
     this._reflectTool('select');
+    await this._initLibrary();   // detect the local levels API → show the Library UI
   }
 }

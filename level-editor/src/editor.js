@@ -14,9 +14,11 @@
 //          intersection) instead of overhanging a single tile. Add entries here
 //          if other oversized pieces should tile too (walls are 2 wide, the big
 //          and round tables, the pizza oven …).
-//   ground floor tiles: laid flush at the stack surface (recessed below, like
-//          the game) and contribute 0 height, so things placed on a floored
-//          cell still sit at ground level rather than on a raised slab.
+//   ground floor tiles: seated with their BOTTOM on the stack surface (a raised
+//          slab, top at +height) and contribute their height, so things placed
+//          on a floored cell rest on top of the floor. Kept as its own flag so
+//          the floor category stays explicit even though it now stacks like any
+//          other piece.
 //   place  a built-in placement offset (world units, in the piece's LOCAL
 //          frame so it rotates with the piece). The wall/door/window kit
 //          shares one origin that sits off-grid, so they get a default nudge
@@ -381,18 +383,17 @@ export class Editor {
     const key = (c, r) => c + ',' + r;
     for (const o of this.state.objects) {
       const m = this._packFor(o).measure(o.model);
-      const ground = this.isGround(o.model);
       const w = o.w || 1, d = o.d || 1;
       let base = 0;
       for (let cc = o.col; cc < o.col + w; cc++)
         for (let rr = o.row; rr < o.row + d; rr++)
           base = Math.max(base, tops.get(key(cc, rr)) || 0);
       o.y = base;
-      // ground tiles lie flush (origin = surface, slab recessed); others rest
-      // their measured bottom on the surface. Manual offsets are cosmetic and
-      // do NOT change the stack a cell contributes.
+      // every piece (floors included) rests its measured bottom on the surface
+      // and contributes its height, so the next piece on the cell stacks on top.
+      // Manual offsets are cosmetic and do NOT change what a cell contributes.
       this._positionNode(o);
-      const top = base + (ground ? 0 : m.height);
+      const top = base + m.height;
       for (let cc = o.col; cc < o.col + w; cc++)
         for (let rr = o.row; rr < o.row + d; rr++)
           tops.set(key(cc, rr), top);
@@ -415,10 +416,10 @@ export class Editor {
     if (!node) return;
     const m = this._packFor(rec).measure(rec.model);
     const p = this.blockCenter(rec.col, rec.row, rec.w || 1, rec.d || 1);
-    // ground pieces sit with their TOP at the surface (slab recessed below) —
-    // `- maxY` harmonises floors whose origin is at the bottom (prototype) with
-    // those whose origin is at the top (restaurant, maxY = 0 ⇒ unchanged).
-    const y = this.isGround(rec.model) ? rec.y - (m.minY + m.height) : rec.y - m.minY;
+    // every piece (floors included) seats its measured bottom on the surface —
+    // `- minY` lifts models whose origin sits below their geometry so the visible
+    // bottom lands at rec.y (floors: bottom flush, slab rising above the surface).
+    const y = rec.y - m.minY;
     const pl = this.placeOffset(rec.model, rec.rot);   // intrinsic, rotates with piece
     const o = rec.off || ZERO;                          // user's manual nudge (world)
     node.position.set(p.x + pl.x + o.x, y + pl.y + o.y, p.z + pl.z + o.z);
@@ -646,7 +647,7 @@ export class Editor {
     const m = this.pack.measure(this.placeModel);
     const base = this._blockBase(t.col, t.row, t.w, t.d);
     const p = this.blockCenter(t.col, t.row, t.w, t.d);
-    const yb = this.isGround(this.placeModel) ? base - (m.minY + m.height) : base - m.minY;
+    const yb = base - m.minY;   // seat measured bottom on the surface (floors included)
     const rot = (this._snapRot != null) ? this._snapRot : this.rotation;   // door snaps to doorway rotation
     const pl = this.placeOffset(this.placeModel, rot);
     this._ghost.position.set(p.x + pl.x, yb + pl.y, p.z + pl.z);

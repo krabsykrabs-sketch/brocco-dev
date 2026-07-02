@@ -73,6 +73,18 @@ function shuffle(arr) {
 function pick(arr) { return arr[Math.floor(rng.next() * arr.length)]; }
 
 /**
+ * Start-of-round practice: verbs missed in EARLIER rounds (the persisted
+ * save.missed list) come back as the first sink questions of the next round.
+ * Returns up to n question keys ("go|past"); verbs no longer in the current
+ * subset are skipped. Consumes no rng draws when the list is empty (QA seeds).
+ */
+export function seedPractice(missedList = [], n = 3) {
+  const known = missedList.filter((v) => VERBS.some((x) => x.v === v));
+  return shuffle(known.slice()).slice(0, n)
+    .map((v) => `${v}|${rng.next() < 0.5 ? 'past' : 'pp'}`);
+}
+
+/**
  * Build one sink question.
  * missed: array of verb keys ("go|past") queued for re-asking — takes priority.
  * recentlyAsked: Set of verb base forms to avoid immediate repeats.

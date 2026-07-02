@@ -1,8 +1,9 @@
 // The sink: dirty plates → verb questions → clean plates. Missed verbs are
 // re-queued (spaced repetition) and persisted for the post-level recap.
-import { makeQuestion } from './verbs.js';
+import { makeQuestion, seedPractice } from './verbs.js';
 import { audio } from './audio.js';
 import { ui } from './ui.js';
+import { t } from './i18n.js';
 
 export class SinkQuiz {
   constructor(game) {
@@ -10,6 +11,11 @@ export class SinkQuiz {
     this.missedQueue = [];          // verb keys waiting to be re-asked
     this.missedThisRound = [];      // [{verb, form}] for the recap
     this.recent = new Set();        // avoid immediate verb repeats
+    // persistent spaced repetition: verbs missed in earlier rounds lead off
+    // this round's washing. A practice ask answered RIGHT proves recall across
+    // rounds → the verb leaves the saved list (it returns if missed again).
+    this.practiceKeys = new Set(seedPractice(game.save.missed));
+    this.missedQueue.push(...this.practiceKeys);
     this.current = null;
     this.lockUntil = 0;             // ignore input briefly after answer
 
@@ -34,7 +40,8 @@ export class SinkQuiz {
 
     this.card.classList.remove('wrongState');
     this.promptEl.innerHTML = q.prompt;
-    this.subEl.textContent = q.sub + (q.fromMissed ? ' · one more try!' : '');
+    this.subEl.textContent = q.sub + (this.practiceKeys.has(q.key) ? t('fromCookbook')
+      : q.fromMissed ? t('oneMoreTry') : '');
     this.chainEl.style.display = 'none';
     this.goBtn.style.display = 'none';
     this.chipsEl.style.display = 'flex';
@@ -60,6 +67,13 @@ export class SinkQuiz {
     if (idx < 0 || idx >= chips.length) return;
     const chosen = q.chips[idx];
     this.lockUntil = performance.now() + 450;
+
+    // a practice ask counts only on its first showing: right → mastered (leaves
+    // the saved list); wrong → the in-round re-ask is a normal "one more try"
+    if (this.practiceKeys.has(q.key)) {
+      this.practiceKeys.delete(q.key);
+      if (chosen === q.answer) this.game.onPracticeMastered(q.verb);
+    }
 
     if (chosen === q.answer) {
       chips[idx].classList.add('good');

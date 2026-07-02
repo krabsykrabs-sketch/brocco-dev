@@ -98,6 +98,17 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 .ctag.cost{color:var(--amber);}
 .charCard .clock{position:absolute; top:9px; right:11px; font-size:18px;}
 
+/* ---------- verb cookbook ---------- */
+.ckSection{background:rgba(12,20,48,.88); border-radius:16px; padding:14px 22px; width:min(94vw,720px);}
+.ckSection h3{font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:9px; font-weight:800;}
+.ckSection.practice{border:2px solid var(--coral);}
+.ckSection.practice h3{color:var(--coral);}
+.ckList{display:grid; grid-template-columns:repeat(auto-fill,minmax(215px,1fr)); gap:6px 18px;
+  font-family:'Fredoka One',cursive; font-size:17px;}
+.ckList .ck{white-space:nowrap;}
+#missedList .ckMore{font-family:'Nunito',sans-serif; font-size:13px; color:var(--muted); font-weight:800;}
+@media (max-width:430px){ .ckList{font-size:15px; grid-template-columns:repeat(auto-fill,minmax(182px,1fr));} }
+
 /* ---------- level select ---------- */
 #levelGrid{display:flex; gap:18px; flex-wrap:wrap; justify-content:center; max-width:760px;}
 .lvl{width:160px; background:var(--navy2); border-radius:20px; padding:18px 14px 14px; display:flex; flex-direction:column;
@@ -152,6 +163,9 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 .ticket.hurry{animation:shake .35s infinite;}
 .ticket.hurry .pfill{background:var(--coral);}
 .ticket.warn .pfill{background:var(--amber);}
+/* the customer's mood sours as the (cosmetic) patience bar drains */
+.ticket .mood{position:absolute; top:-9px; left:-9px; font-size:19px;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));}
 @keyframes shake{0%,100%{transform:rotate(0)} 25%{transform:rotate(-2.2deg)} 75%{transform:rotate(2.2deg)}}
 /* full-width top status bar: timer + orders progress pinned left, coins +
    buttons pinned right (the spacer pushes them apart). The order tickets sit
@@ -289,7 +303,7 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 #missedBox{background:var(--navy2); border-radius:16px; padding:14px 26px; max-width:460px;}
 #missedBox h3{font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; font-weight:800;}
 #missedList{display:flex; flex-direction:column; gap:5px; font-family:'Fredoka One',cursive; font-size:19px;}
-#missedBox.empty #missedList::after{content:"Perfect washing! ✨"; color:var(--teal); font-size:17px;}
+#missedBox.empty #missedList::after{content:attr(data-empty); color:var(--teal); font-size:17px;}
 .postBtns{display:flex; gap:14px;}
 #countdown{position:absolute; inset:0; z-index:35; display:none; align-items:center; justify-content:center; pointer-events:none;}
 #countdown.on{display:flex;}
@@ -337,7 +351,7 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 
 <div id="quiz">
   <div id="quizCard">
-    <div id="quizTitle">🧽 Wash a plate — 3 correct = 1 clean plate</div>
+    <div id="quizTitle" data-i18n="quizTitle">🧽 Wash a plate — 3 correct = 1 clean plate</div>
     <div id="washBar"><div class="seg"></div><div class="seg"></div><div class="seg"></div></div>
     <div id="washLabel">🍽️ 0/3</div>
     <div id="quizPrompt"></div>
@@ -345,9 +359,9 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
     <div id="chips"></div>
     <div id="quizChain"></div>
     <div class="quizBtns">
-      <button id="quizGo" class="btn-ghost">Keep washing 🧽</button>
+      <button id="quizGo" class="btn-ghost" data-i18n="keepWashing">Keep washing 🧽</button>
     </div>
-    <div id="quizKeys">press <span class="key">1</span> <span class="key">2</span> <span class="key">3</span></div>
+    <div id="quizKeys" data-i18n="quizKeys">press <span class="key">1</span> <span class="key">2</span> <span class="key">3</span></div>
   </div>
 </div>
 
@@ -359,25 +373,40 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 <div id="startScreen" class="screen">
   <div class="menuTop">
     <h1 class="logo"><span class="pan">🍳</span>Verb Kitchen</h1>
-    <div class="tagline">Cook fast · Wash smart · Master your irregular verbs</div>
-    <button id="playBtn" class="btn-primary">Play! 🍳</button>
-    <button id="charsBtn" class="btn-ghost">🧑‍🍳 Characters</button>
+    <div class="tagline" data-i18n="tagline">Cook fast · Wash smart · Master your irregular verbs</div>
+    <button id="playBtn" class="btn-primary" data-i18n="play">Play! 🍳</button>
+    <button id="charsBtn" class="btn-ghost" data-i18n="characters">🧑‍🍳 Characters</button>
+    <button id="cookbookBtn" class="btn-ghost" data-i18n="cookbook">📖 Cookbook</button>
     <div id="loadingNote"></div>
   </div>
-  <div class="menuHint"><span class="key">WASD</span> move · <span class="key">E</span> pick up · <span class="key">Space</span> chop — then wash dirty plates with verbs: <span class="form-base">go</span> → <span class="form-past">went</span> → <span class="form-pp">gone</span></div>
+  <div class="menuHint" data-i18n="menuHint"><span class="key">WASD</span> move · <span class="key">E</span> pick up · <span class="key">Space</span> chop — then wash dirty plates with verbs: <span class="form-base">go</span> → <span class="form-past">went</span> → <span class="form-pp">gone</span></div>
 </div>
 
 <div id="levelScreen" class="screen hidden">
-  <h1 class="logo" style="font-size:36px;">Choose your shift</h1>
+  <h1 class="logo" style="font-size:36px;" data-i18n="chooseShift">Choose your shift</h1>
   <div id="levelGrid"></div>
-  <button id="backBtn" class="btn-ghost">← Back</button>
+  <button id="backBtn" class="btn-ghost" data-i18n="back">← Back</button>
 </div>
 
 <div id="shopScreen" class="screen hidden">
-  <h1 class="logo" style="font-size:34px;">Characters</h1>
-  <div class="tagline">Earn stars to unlock new chefs — <span id="shopStars" class="form-base">0</span> ⭐ collected</div>
+  <h1 class="logo" style="font-size:34px;" data-i18n="shopTitle">Characters</h1>
+  <div class="tagline" data-i18n="shopTag">Earn stars to unlock new chefs — <span id="shopStars" class="form-base">0</span> ⭐ collected</div>
   <div id="shopGrid"></div>
-  <button id="shopBack" class="btn-ghost">← Back</button>
+  <button id="shopBack" class="btn-ghost" data-i18n="back">← Back</button>
+</div>
+
+<div id="cookbookScreen" class="screen hidden">
+  <h1 class="logo" style="font-size:34px;" data-i18n="cookbookTitle">📖 Verb Cookbook</h1>
+  <div class="tagline" id="cookbookSub"></div>
+  <div id="cookbookPractice" class="ckSection practice hidden">
+    <h3 data-i18n="ckPractice">🧽 To practice</h3>
+    <div class="ckList" id="cookbookPracticeList"></div>
+  </div>
+  <div class="ckSection">
+    <h3 data-i18n="ckAll">All verbs</h3>
+    <div class="ckList" id="cookbookAllList"></div>
+  </div>
+  <button id="cookbookBack" class="btn-ghost" data-i18n="back">← Back</button>
 </div>
 
 <div id="post" class="screen hidden">
@@ -387,17 +416,18 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
   <div class="tagline" id="postCoins"></div>
   <div class="tagline" id="postBest"></div>
   <div id="postAuthor"></div>
-  <div id="missedBox"><h3>Verbs to practice</h3><div id="missedList"></div></div>
+  <div id="missedBox"><h3 data-i18n="verbsToPractice">Verbs to practice</h3><div id="missedList"></div>
+    <button id="postCookbook" class="btn-ghost" style="margin-top:10px; font-size:13px; padding:6px 16px;" data-i18n="cookbook">📖 Cookbook</button></div>
   <div class="postBtns">
-    <button id="retryBtn" class="btn-ghost">↻ Retry</button>
-    <button id="nextBtn" class="btn-primary" style="font-size:19px; padding:11px 34px;">Next level →</button>
-    <button id="menuBtn" class="btn-ghost">Levels</button>
+    <button id="retryBtn" class="btn-ghost" data-i18n="retry">↻ Retry</button>
+    <button id="nextBtn" class="btn-primary" style="font-size:19px; padding:11px 34px;" data-i18n="nextLevel">Next level →</button>
+    <button id="menuBtn" class="btn-ghost" data-i18n="levels">Levels</button>
   </div>
 </div>
 
 <div id="recipe" class="hidden">
   <div id="recipeCard">
-    <div id="recipeTag">New<br>Recipe!</div>
+    <div id="recipeTag" data-i18n="newRecipe">New<br>Recipe!</div>
     <div id="recipeTitle">Recipe</div>
     <div id="recipeRule"></div>
     <img id="recipeImg" alt="recipe">
@@ -406,8 +436,8 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
       <div id="recipeLoaderPizza"></div>
       <div id="recipeLoaderMsg">Heating the ovens</div>
     </div>
-    <button id="recipeBtn" class="btn-primary" style="font-size:20px; padding:12px 40px;">Let's cook! 🍳</button>
-    <div id="recipeHint">out of clean plates? wash them by answering verb questions 🧽</div>
+    <button id="recipeBtn" class="btn-primary" style="font-size:20px; padding:12px 40px;" data-i18n="letsCook">Let's cook! 🍳</button>
+    <div id="recipeHint" data-i18n="recipeHint">out of clean plates? wash them by answering verb questions 🧽</div>
   </div>
 </div>
 
@@ -416,7 +446,7 @@ h1.logo .pan{display:inline-block; transform:rotate(-8deg); margin-right:8px;}
 <div id="loader" class="hidden">
   <div id="loaderPizza"></div>
   <div id="loaderMsg">Rolling the dough</div>
-  <div id="loaderSub">your kitchen is being set up</div>
+  <div id="loaderSub" data-i18n="loaderSub">your kitchen is being set up</div>
 </div>
 <script type="module" src="src/main.js"></script>
 </body>

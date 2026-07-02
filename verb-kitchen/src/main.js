@@ -8,6 +8,9 @@ import { charUnlocked } from './models.js';
 import { seedRng } from './verbs.js';
 import { initQA } from './qa.js';
 import { initTouch } from './touch.js';
+import { applyStatic } from './i18n.js';
+
+applyStatic();   // swap every static data-i18n string for the player's language
 
 // Robust tap: bind pointerup (touch/pen) alongside click, deduped — some touch
 // browsers don't deliver a `click` after a touch, which would leave the menu
@@ -113,6 +116,17 @@ function pickChar(id) {
   audio.init();
   ui.renderShop(save, selectedChar(), pickChar);   // refresh the "✓ Selected" highlight
 }
+// --- verb cookbook (opens from the start screen AND the post-level recap) ---
+let cookbookReturn = 'startScreen';
+function showCookbook(from) {
+  cookbookReturn = from;
+  ui.renderCookbook(save);
+  ui.showScreen('cookbookScreen');
+}
+tap(document.getElementById('cookbookBtn'), () => showCookbook('startScreen'));
+tap(document.getElementById('postCookbook'), () => showCookbook('post'));
+tap(document.getElementById('cookbookBack'), () => ui.showScreen(cookbookReturn));
+
 tap(document.getElementById('charsBtn'), () => {
   ui.renderShop(save, selectedChar(), pickChar);
   ui.showScreen('shopScreen');

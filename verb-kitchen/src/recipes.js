@@ -1,5 +1,6 @@
 // Item + dish data tables. The model column is the single source of truth
 // for what each item looks like — swapping art = editing this table.
+import { t } from './i18n.js';
 //
 // Chop chains: chopTo may point at another choppable (two-stage chopping:
 // raw → half → done). `interim` marks the halfway stage for hints.
@@ -347,7 +348,7 @@ export function potRecipeHint(have) {
     .filter((r) => have.every((v) => r.includes(v)))
     .map((r) => r.filter((v) => !have.includes(v)).map((v) => POT_EMOJI[v]).join(' + '))
     .filter((s) => s.length);
-  return opts.length ? `add ${opts.join(' or ')} 🍲` : 'pot full 🍲';
+  return opts.length ? t('hintPotAdd', opts.join(` ${t('or')} `)) : t('hintPotFull');
 }
 
 /** Counter-top combine (pizza assembly): base item + held item → result id or null. */

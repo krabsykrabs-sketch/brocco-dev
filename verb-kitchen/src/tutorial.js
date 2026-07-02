@@ -5,6 +5,7 @@
 // banner shows the current step and a bobbing arrow points at the station.
 import * as THREE from 'three';
 import { ui } from './ui.js';
+import { t } from './i18n.js';
 
 export class Tutorial {
   constructor(game) {
@@ -14,21 +15,21 @@ export class Tutorial {
     this.t = 0;
     const G = game;
     this.steps = [
-      { icon: '🥬', text: 'Grab the lettuce from the box',
+      { icon: '🥬', text: t('tut1'),
         target: () => crate(G, 'lettuce'), test: () => carries(G, 'lettuce') },
-      { icon: '🔪', text: 'Drop it on a cutting board and hold Space to chop',
+      { icon: '🔪', text: t('tut2'),
         target: () => board(G), test: () => exists(G, 'lettuce_chopped') },
-      { icon: '🥗', text: 'Put the chopped lettuce on the plate',
+      { icon: '🥗', text: t('tut3'),
         target: () => plateStation(G), test: () => plateHas(G, 'lettuce_chopped') },
-      { icon: '🍅', text: 'Now grab a tomato from the box',
+      { icon: '🍅', text: t('tut4'),
         target: () => crate(G, 'tomato'), test: () => carries(G, 'tomato') },
-      { icon: '🔪', text: 'Chop the tomato too',
+      { icon: '🔪', text: t('tut5'),
         target: () => board(G), test: () => exists(G, 'tomato_slices') },
-      { icon: '🥗', text: "Add the tomato — now it's a salad!",
+      { icon: '🥗', text: t('tut6'),
         target: () => plateStation(G), test: () => saladDone(G) },
-      { icon: '🛎️', text: 'Carry the salad to the serving window',
+      { icon: '🛎️', text: t('tut7'),
         target: () => first(G, 'hatch'), test: () => G.orders.served >= 1 },
-      { icon: '🧽', text: 'Now wash the dirty plate at the sink',
+      { icon: '🧽', text: t('tut8'),
         target: () => first(G, 'sink'), test: () => (G.washesCompleted || 0) >= 1 },
     ];
 
@@ -56,7 +57,7 @@ export class Tutorial {
       }
       if (this.i >= this.steps.length) {
         this.done = true;
-        ui.tutorialDone('Tutorial complete — now make 2 more salads! 🥗');
+        ui.tutorialDone(t('tutDone'));
       }
     }
     const st = this.done ? null : this.steps[this.i].target();

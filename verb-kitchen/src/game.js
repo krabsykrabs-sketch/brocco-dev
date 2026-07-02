@@ -14,6 +14,7 @@ import { modelIcon } from './icons.js';
 import { Tutorial } from './tutorial.js';
 import { ui } from './ui.js';
 import { audio } from './audio.js';
+import { t } from './i18n.js';
 
 const CHOP_TIME = 1.4;
 const PLATE_RETURN_DELAY = 5;
@@ -538,7 +539,7 @@ export class Game {
     const st = this.targetStation();
     if (st && st.type === 'sink') {
       if (st.dirtyPlates > 0) this.quiz.openQuestion();
-      else { this.reject(null); this.fx.pop(st.pos.clone().setY(1.8), 'no dirty plates ✨', 'var(--teal)'); }
+      else { this.reject(null); this.fx.pop(st.pos.clone().setY(1.8), t('popNoDirty'), 'var(--teal)'); }
     }
   }
 
@@ -591,7 +592,8 @@ export class Game {
     this.combo++;
     const bonus = Math.min(Math.max(this.combo - 1, 0), 3) * 5;
     const orderBonus = res.inOrder ? 5 : 0;     // served the oldest ticket first
-    const gained = d.coins + bonus + orderBonus;
+    const tip = Math.round((res.tipFrac || 0) * 8);   // patience tip: fast serve = happy customer
+    const gained = d.coins + bonus + orderBonus + tip;
     this.score += gained;
     this.chef.setCarried(null);
     audio.serve();
@@ -599,9 +601,9 @@ export class Game {
     ui.setCombo(this.combo);
     ui.setOrders(res.served, res.total);
     this.fx.coins(hatch.pos.clone().setY(1.8));
-    this.fx.pop(hatch.pos.clone().setY(1.8), `+${gained} 🪙${bonus ? ' 🔥' : ''}${orderBonus ? ' 📋' : ''}`);
+    this.fx.pop(hatch.pos.clone().setY(1.8), `+${gained} 🪙${bonus ? ' 🔥' : ''}${orderBonus ? ' 📋' : ''}${tip >= 6 ? ' 😊' : ''}`);
     if (this.orders.allServed()) {
-      this.fx.pop(hatch.pos.clone().setY(2.3), 'all served! 🎉', 'var(--teal)');
+      this.fx.pop(hatch.pos.clone().setY(2.3), t('popAllServed'), 'var(--teal)');
       setTimeout(() => { if (!this.roundOver) this.endRound(); }, 900);
     } else {
       // plate comes back dirty in a few seconds
@@ -642,7 +644,15 @@ export class Game {
     return { plateDone: false };
   }
   onPlateMissed(q) {
-    if (!this.save.missed.includes(q.verb)) this.save.missed.push(q.verb);
+    // persist right away (onRoundEnd is the save hook) — quitting mid-round
+    // must not lose the practice list
+    if (!this.save.missed.includes(q.verb)) { this.save.missed.push(q.verb); this.onRoundEnd(this); }
+  }
+  /** A start-of-round practice ask answered right = recalled across rounds →
+   *  the verb leaves the persisted list (it comes back if missed again). */
+  onPracticeMastered(verb) {
+    const i = this.save.missed.indexOf(verb);
+    if (i >= 0) { this.save.missed.splice(i, 1); this.onRoundEnd(this); }
   }
 
   // ---------- smoke / alarm ----------
@@ -681,20 +691,20 @@ export class Game {
     const held = this.chef.carried;
     let text = '';
     if (st) {
-      if (st.type === 'crate') text = held ? '' : `E — grab ${ITEMS[st.crateItem].emoji}`;
+      if (st.type === 'crate') text = held ? '' : t('hintGrab', ITEMS[st.crateItem].emoji);
       else if (st.type === 'board') {
         const heldPlate = held && held.type === 'plate' && !held.dirty;
-        if (held && held.type === 'ing' && st.item && st.item.type === 'ing' && combine(held.id, st.item.id)) text = `E — add to the ${ITEMS[held.id].compose === 'pot' || held.id === 'pot_empty' ? 'pot 🍲' : 'mix'}`;
-        else if (st.item && ITEMS[st.item.id]?.interim) text = 'halfway — keep chopping!';
-        else if (st.item && ITEMS[st.item.id]?.chopTo) text = `hold Space — ${ITEMS[st.item.id].chopVerb || 'chop'}!`;
-        else if (st.item && heldPlate && ITEMS[st.item.id]?.plateable && canPlate(held.contents, st.item.id)) text = 'E — add to plate 🍽️';
-        else if (st.item && !held) text = 'E — take it';
+        if (held && held.type === 'ing' && st.item && st.item.type === 'ing' && combine(held.id, st.item.id)) text = ITEMS[held.id].compose === 'pot' || held.id === 'pot_empty' ? t('hintAddPot') : t('hintAddMix');
+        else if (st.item && ITEMS[st.item.id]?.interim) text = t('hintHalfway');
+        else if (st.item && ITEMS[st.item.id]?.chopTo) text = ITEMS[st.item.id].chopVerb ? t('hintRoll') : t('hintChop');
+        else if (st.item && heldPlate && ITEMS[st.item.id]?.plateable && canPlate(held.contents, st.item.id)) text = t('hintAddPlate');
+        else if (st.item && !held) text = t('hintTakeIt');
         else if (held && held.type === 'ing' && ITEMS[held.id].chopTo) {
           const need = ITEMS[held.id].tool || 'knife';
-          if (need === (st.tool || 'knife')) text = 'E — put it on the board';
-          else text = need === 'rollingpin' ? 'dough needs the rolling pin 🥖' : 'that needs the cutting board 🔪';
+          if (need === (st.tool || 'knife')) text = t('hintPutBoard');
+          else text = need === 'rollingpin' ? t('hintNeedsPin') : t('hintNeedsBoard');
         }
-        else if (held && held.type === 'ing') text = 'E — set it down';
+        else if (held && held.type === 'ing') text = t('hintSetDown');
       }
       else if (st.type === 'stove' || st.type === 'oven') {
         const emptyPlate = held && held.type === 'plate' && !held.dirty && held.contents.length === 0;
@@ -702,22 +712,22 @@ export class Game {
         const potOnStove = st.type === 'stove' && st.item && st.item.type === 'ing' && isPotItem(st.item.id);
         if (potOnStove) {
           const pdef = ITEMS[st.item.id];
-          if (pdef.scoop) text = st.state === 'cooking' ? 'boiling…' : emptyPlate ? 'E — scoop the soup 🥣' : 'soup ready — bring a bowl 🥣';
-          else if (st.state === 'cooking') text = 'boiling…';
-          else if (held && held.type === 'ing' && combine(st.item.id, held.id)) text = 'E — add to the pot 🍲';
+          if (pdef.scoop) text = st.state === 'cooking' ? t('hintBoiling') : emptyPlate ? t('hintScoopSoup') : t('hintSoupReady');
+          else if (st.state === 'cooking') text = t('hintBoiling');
+          else if (held && held.type === 'ing' && combine(st.item.id, held.id)) text = t('hintAddPot');
           else text = potRecipeHint(pdef.veg || []);
         }
         else if (st.state === 'ready') {
-          if (st.type === 'oven') text = emptyPlate ? 'E — plate the pizza!' : 'too hot! bring a clean plate 🍽️';
+          if (st.type === 'oven') text = emptyPlate ? t('hintPlatePizza') : t('hintTooHotPlate');
           else {
             const onBun = held && held.type === 'ing' && st.item && combine(held.id, st.item.id);
-            text = emptyPlate ? 'E — plate the patty!' : onBun ? 'E — patty on the bun!' : 'too hot! use a plate or bun 🍽️🍞';
+            text = emptyPlate ? t('hintPlatePatty') : onBun ? t('hintPattyBun') : t('hintTooHotPlateBun');
           }
         } else if (st.state === 'burnt') {
-          if (st.type === 'oven') text = emptyPlate ? 'E — plate it… for the trash 💀' : 'too hot! bring a clean plate 🍽️';
-          else text = held ? 'free a hand to bin it 💀' : 'E — bin the burnt patty 💀';
+          if (st.type === 'oven') text = emptyPlate ? t('hintPlateTrash') : t('hintTooHotPlate');
+          else text = held ? t('hintFreeHand') : t('hintBinBurnt');
         }
-        else if (st.state === 'cooking') text = 'cooking…';
+        else if (st.state === 'cooking') text = t('hintCooking');
         // a pizza still missing a must-have topping can't go in the oven yet
         else if (heldDef && st.type === 'oven' && !heldDef.bakeTo &&
                  (heldDef.compose === 'pizza' || held.id === 'dough_base')) {
@@ -725,18 +735,18 @@ export class Game {
           const need = [];
           if (!have.includes('sauce')) need.push('🥫');
           if (!have.includes('cheese')) need.push('🧀');
-          text = `add ${need.join(' + ')} first 🍕`;
+          text = t('hintAddFirst', need.join(' + '));
         }
-        else if (held) text = 'E — start cooking';
+        else if (held) text = t('hintStartCooking');
       }
-      else if (st.type === 'sink') text = st.dirtyPlates > 0 ? 'Space — wash a plate 🧽' : 'no dirty plates';
-      else if (st.type === 'rack') text = held ? '' : 'E — take a clean plate';
-      else if (st.type === 'hatch') text = (held && held.type === 'plate' && held.dish) ? 'E — serve! 🛎️' : 'serving hatch';
-      else if (st.type === 'trash') text = held ? 'E — throw away' : '';
+      else if (st.type === 'sink') text = st.dirtyPlates > 0 ? t('hintWashPlate') : t('hintNoDirty');
+      else if (st.type === 'rack') text = held ? '' : t('hintTakePlate');
+      else if (st.type === 'hatch') text = (held && held.type === 'plate' && held.dish) ? t('hintServe') : t('hintHatch');
+      else if (st.type === 'trash') text = held ? t('hintThrowAway') : '';
       else if (st.type === 'counter') {
-        if (held && st.item) text = 'E — combine';
-        else if (held) text = 'E — put down';
-        else if (st.item) text = 'E — pick up';
+        if (held && st.item) text = t('hintCombine');
+        else if (held) text = t('hintPutDown');
+        else if (st.item) text = t('hintPickUp');
       }
     }
     if (text !== this.lastHint || force) {
@@ -780,10 +790,10 @@ export class Game {
       for (const ev of st.update(dt, this.questionOpen)) {
         if (ev === 'ready') {
           audio.ding();
-          this.fx.pop(st.pos.clone().setY(st.topY + 1), 'ready!', 'var(--teal)');
+          this.fx.pop(st.pos.clone().setY(st.topY + 1), t('popReady'), 'var(--teal)');
           if (ITEMS[st.item.id]?.steamy) st.item.steam = 14;   // hot & ready
         }
-        if (ev === 'burnt') { this.startSmoke(st); this.fx.pop(st.pos.clone().setY(st.topY + 1), 'burnt! 🔥', 'var(--coral)'); }
+        if (ev === 'burnt') { this.startSmoke(st); this.fx.pop(st.pos.clone().setY(st.topY + 1), t('popBurnt'), 'var(--coral)'); }
       }
       // the resting board tool vanishes while it's being used (it's "in the
       // chef's hand") and returns the moment chopping stops — for the player AND
@@ -799,8 +809,18 @@ export class Game {
     this.updateSizzle();
     this.updateSteam(dt);
 
-    // orders stream in from the fixed queue (no expiry — deliver them all)
-    this.orders.update(dt);
+    // orders stream in from the fixed queue (nothing expires — deliver them
+    // all). While a sink question is open, patience drains at only 30%:
+    // thinking at the sink is safe-ish, but not free.
+    this.orders.update(this.questionOpen ? dt * 0.3 : dt);
+
+    // frantic layer: kicks in when the kitchen is objectively drowning — a
+    // customer nearly out of patience, or a full ticket rail with smoke.
+    // Never during the sink question (that's the catch-your-breath moment).
+    const frantic = !this.questionOpen &&
+      (this.orders.anyHurry() || (this.orders.tickets.length >= 3 && this.fx.smokeSources.size > 0));
+    audio.frantic(frantic);
+    ui.setFrantic(frantic);
 
     // dirty plates in transit back to the sink
     for (let i = this.plateReturns.length - 1; i >= 0; i--) {
@@ -809,13 +829,14 @@ export class Game {
         this.plateReturns.splice(i, 1);
         this.sinkStation.dirtyPlates++;
         this.sinkStation.refreshStack();
-        audio.putdown();
+        audio.clatter();   // the dirty plate clatters onto the sink pile
       }
     }
 
-    // target-tile highlight
-    const t = this.chef.targetTile();
-    const st = this.world.stationAtTile(t.col, t.row);
+    // target-tile highlight (NB: don't name a local `t` in this function — it
+    // would shadow the i18n t() used by the ready/burnt pops above)
+    const tile = this.chef.targetTile();
+    const st = this.world.stationAtTile(tile.col, tile.row);
     this.world.highlight.visible = !!st;
     if (st) this.world.highlight.position.set(st.pos.x, 1.12, st.pos.z);
 
@@ -826,6 +847,7 @@ export class Game {
 
   endRound() {
     this.roundOver = true;
+    ui.setFrantic(false);
     audio.stopAll();
     audio.serve();
     if (this.quiz.open) this.quiz.close();
@@ -833,25 +855,26 @@ export class Game {
     ui.hud(false);
 
     const lv = this.level;
-    const t = this.elapsed;
+    const time = this.elapsed;
     const [, s2, s3, sA] = lv.starTimes;     // s1 (1★) is now just "finish" — always ≥1
     let stars = 1;                            // completing the level always earns ≥1 star
-    if (t <= s2) stars = 2;
-    if (t <= s3) stars = 3;
-    if (t <= sA) stars = 4;                   // author star (hardest)
+    if (time <= s2) stars = 2;
+    if (time <= s3) stars = 3;
+    if (time <= sA) stars = 4;                // author star (hardest)
     const prevStars = this.save.stars[lv.id] || 0;
     const prevBest = this.save.bestTime[lv.id];      // best = FASTEST time (lower is better)
-    const isNewBest = prevBest == null || t < prevBest;
+    const isNewBest = prevBest == null || time < prevBest;
     this.save.stars[lv.id] = Math.max(prevStars, stars);
-    if (isNewBest) this.save.bestTime[lv.id] = t;
+    if (isNewBest) this.save.bestTime[lv.id] = time;
     this.onRoundEnd(this);
 
-    ui.renderPost(lv, t, this.score, stars, this.quiz.missedThisRound, this.save.bestTime[lv.id],
+    ui.renderPost(lv, time, this.score, stars, this.quiz.missedThisRound, this.save.bestTime[lv.id],
       this.levelIdx < LEVELS.length - 1, isNewBest);
   }
 
   stopRound() {
     this.running = false;
+    ui.setFrantic(false);
     audio.stopAll();
     if (this.quiz && this.quiz.open) this.quiz.close();
     if (this.orders) this.orders.clear();

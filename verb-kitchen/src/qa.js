@@ -79,6 +79,9 @@ export function initQA(game, save, startLevel, params) {
     setNoSpawn(on = true) { game.orders.spawningEnabled = !on; },
     startLevel,
     saveRaw: () => localStorage.getItem('krabsy_vkitchen_save'),
+    // persistent spaced repetition: the practice keys seeded this round
+    practiceKeys: () => (game.quiz ? [...game.quiz.practiceKeys] : null),
+    missedSaved: () => [...save.missed],
   };
   game.carried = () => {
     const c = game.chef?.carried;
@@ -105,6 +108,13 @@ export function initQA(game, save, startLevel, params) {
                      bestTime: { garden: 58, burger: 152, pizzapalace: 240 } };
       ui.renderLevelGrid(fake, () => {});
       ui.showScreen('levelScreen');
+      window.__VK_READY = true;
+      return;
+    }
+    if (scene === 'cookbook') {      // verb cookbook with a sample practice list
+      save.missed = ['go', 'eat', 'think', 'catch'];
+      ui.renderCookbook(save);
+      ui.showScreen('cookbookScreen');
       window.__VK_READY = true;
       return;
     }
